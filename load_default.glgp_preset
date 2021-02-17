@@ -1,0 +1,39 @@
+<replace_words>
+# old_words = new_words
+
+<remove_words>
+(
+)
+
+<data_segment>
+/
+,
+
+<key_value_separate>
+=
+
+<post_process>
+# format 01 (len 4) : new_itme = op_item_01 op_code op_item_02
+# new_itme;op_item_01; op_code;op_item_02
+key_001_add_key_002;key_001;+;key_002
+key_000_mod_52;key_000;%;52
+key_001_mod_52;key_001;%;52
+key_002_mod_52;key_002;%;52
+key_003_mod_52;key_003;%;52
+
+
+# format 02 (len 2) : op_item_01 = op_item_01 with op_code
+# op_item_01; op_code
+key_004_val;char2int
+
+# format 03 (len 5) : new_itme = format % (op_item_01 ; op_item_02) op_code: fmt
+# new_itme;fmt;op_item_01;op_item_02;format
+key_004_and_key_005;fmt;key_004;key_005;%s,%s
+
+<alias>
+# format : new_item;ori_item
+key_004_val;key_004
+
+<time_step_sec>
+# time step for plot usage only
+1
