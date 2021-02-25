@@ -27,6 +27,7 @@ from math import ceil
 from os.path import isfile
 from os.path import splitext
 from os.path import basename
+from os.path import abspath
 # from os import chdir
 
 
@@ -36,10 +37,10 @@ CFG_FILE = "load_default.glgp_plot"
 CFG_REF_FILE = None
 PRESET_FILE = "load_default.glgp_preset"
 
-GLOBAL_SETTING_FILE = "gp_log_visual_tool_global_setting.cfg"
-
 filename_with_path, ext_name = splitext(__file__)
 GLOBAL_SETTING_FILE = basename(filename_with_path) + ".cfg"
+
+CFG_FILE_PATH = join(dirname(abspath(__file__)), "cfg")
 
 
 le = LabelEncoder()
@@ -95,11 +96,18 @@ def update_cfg_files():
     global CFG_FILE
     global CFG_REF_FILE
     global PRESET_FILE
+    global CFG_FILE_PATH
+
+    cfg_file_with_path = join(CFG_FILE_PATH, GLOBAL_SETTING_FILE)
+    if not isfile(cfg_file_with_path):
+        CFG_FILE_PATH = dirname(abspath(__file__))
+
+    cfg_file_with_path = join(CFG_FILE_PATH, GLOBAL_SETTING_FILE)
 
     possible_key_words = ["preset_file", "plot_items_file",
                           "dump_possible_items_file"]
 
-    fr = open(GLOBAL_SETTING_FILE, "r", encoding='utf-8')
+    fr = open(cfg_file_with_path, "r", encoding='utf-8')
     fl = fr.readlines()
 
     cur_file_type = None
@@ -114,6 +122,8 @@ def update_cfg_files():
             continue
 
         tmp_line = line_data.strip()
+        tmp_line = join(CFG_FILE_PATH, tmp_line)
+
         if isfile(tmp_line):
             if cur_file_type == "preset_file":
                 PRESET_FILE = tmp_line
@@ -124,13 +134,16 @@ def update_cfg_files():
                 CFG_REF_FILE = tmp_line
     if CFG_REF_FILE is None:
         filename_with_path, ext_name = splitext(CFG_FILE)
-        CFG_REF_FILE = basename(filename_with_path) + \
-            "_possible_items.glgp_plot"
+        CFG_REF_FILE = join(CFG_FILE_PATH, basename(filename_with_path) +
+                            "_possible_items.glgp_plot")
 
 
 def get_preset_cfg_from_file():
     global _preset_cfg
+    global PRESET_FILE
 
+    print("DD")
+    print(PRESET_FILE)
     fr = open(PRESET_FILE, "r", encoding='utf-8')
     fl = fr.readlines()
     possible_preset_modes = ["replace_words", "remove_words",
@@ -1039,7 +1052,7 @@ def main():
     fig = []
     # cur_path = getcwd()
     cur_path = dirname(__file__)
-    cfg_file_with_path = join(cur_path, CFG_FILE)
+    cfg_file_with_path = join(CFG_FILE_PATH, CFG_FILE)
     cfg_ref_file_with_path = join(cur_path, CFG_REF_FILE)
 
     fw = open(cfg_ref_file_with_path, "w")
