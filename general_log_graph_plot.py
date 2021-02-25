@@ -4,6 +4,7 @@
 To generatelog visual graph
 # Version|Date       |Author     |Note                                  |
 # 0.0.1  |20210217   |jupiter    |Draft version                         |
+# 0.0.2  |20210226   |jupiter    |Move configuration files to 'cfg'     |
 '''
 
 from os.path import dirname
@@ -31,8 +32,8 @@ from os.path import abspath
 # from os import chdir
 
 
-VERSION_CODE = "0.0.1"
-VERSION_DATE = "20210217"
+VERSION_CODE = "0.0.2"
+VERSION_DATE = "20210226"
 CFG_FILE = "load_default.glgp_plot"
 CFG_REF_FILE = None
 PRESET_FILE = "load_default.glgp_preset"
@@ -142,8 +143,6 @@ def get_preset_cfg_from_file():
     global _preset_cfg
     global PRESET_FILE
 
-    print("DD")
-    print(PRESET_FILE)
     fr = open(PRESET_FILE, "r", encoding='utf-8')
     fl = fr.readlines()
     possible_preset_modes = ["replace_words", "remove_words",
