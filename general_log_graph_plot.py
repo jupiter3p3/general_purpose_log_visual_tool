@@ -852,7 +852,7 @@ class LogFigure:
         data_for_plot, labels = get_plot_data(data, text_flag)
 
         if text_flag and self.share_y_axis_times > 0:
-            self.share_y_axis_times == 0
+            self.share_y_axis_times = 0
             debug_print("share cnt reset!!! key %s" % (new_data_key))
 
         host_flag = (self.cur_data_count == 0)
