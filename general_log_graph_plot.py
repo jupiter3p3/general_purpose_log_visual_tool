@@ -83,7 +83,7 @@ def check_data_is_all_value(data):
         for tmp_idx in range(data_len):
             data_tmp = data[tmp_idx]
             if is_value:
-                if isinstance(data_tmp, int) or isinstance(data_tmp, float):
+                if isinstance(data_tmp, (int, float)):
                     continue
                 if not data_tmp.lstrip('-+').isnumeric():
                     is_value = False
