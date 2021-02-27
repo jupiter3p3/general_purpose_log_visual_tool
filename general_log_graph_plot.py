@@ -576,11 +576,8 @@ def get_data_from_file():
                 data_base.keys()) or _post_item_01 in data_base.keys():
             post_operation_valid = True
             if _post_item_02 in data_base.keys():
-                if check_data_is_all_value(data_base[_post_item_01]) and \
-                        check_data_is_all_value(data_base[_post_item_02]):
-                    post_operation_valid = True
-                else:
-                    post_operation_valid = False
+                post_operation_valid = bool(check_data_is_all_value(data_base[_post_item_01]) and \
+                        check_data_is_all_value(data_base[_post_item_02]))
             else:
                 if check_data_is_all_value(data_base[_post_item_01]) and \
                         check_data_is_all_value(_post_item_02):
