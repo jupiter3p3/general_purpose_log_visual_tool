@@ -130,9 +130,8 @@ def update_cfg_files():
                 PRESET_FILE = tmp_line
             elif cur_file_type == "plot_items_file":
                 CFG_FILE = tmp_line
-        elif cur_file_type == "dump_possible_items_file":
-            if tmp_line[0] != '#':
-                CFG_REF_FILE = tmp_line
+        elif cur_file_type == "dump_possible_items_file" and tmp_line[0] != '#':
+            CFG_REF_FILE = tmp_line
     if CFG_REF_FILE is None:
         #  filename_with_path, ext_name = splitext(CFG_FILE)
         filename_with_path = splitext(CFG_FILE)[0]
@@ -537,33 +536,31 @@ def get_data_from_file():
         _format_item_01 = _preset_cfg['_format_item_01'][tmp_idx]
         _format_item_02 = _preset_cfg['_format_item_02'][tmp_idx]
         if _format_item_01 in data_base.keys() and \
-                _format_item_02 in data_base.keys():
-            if _format_new_item not in data_base.keys():
-                is_value = True
-                tmp_data_array = []
-                for data_index in range(min(len(data_base[_format_item_01]),
-                                            len(data_base[_format_item_02]))):
-                    data_01 = data_base[_format_item_01][data_index]
-                    data_02 = data_base[_format_item_02][data_index]
+                _format_item_02 in data_base.keys() and _format_new_item not in data_base.keys():
+            is_value = True
+            tmp_data_array = []
+            for data_index in range(min(len(data_base[_format_item_01]),
+                                        len(data_base[_format_item_02]))):
+                data_01 = data_base[_format_item_01][data_index]
+                data_02 = data_base[_format_item_02][data_index]
 
-                    tmp_data = _format_format % (data_01, data_02)
-                    tmp_data_array.append(tmp_data)
+                tmp_data = _format_format % (data_01, data_02)
+                tmp_data_array.append(tmp_data)
 
-                data_base = data_base_insert_data(data_base, tmp_data_array,
-                                                  _format_new_item, False)
+            data_base = data_base_insert_data(data_base, tmp_data_array,
+                                              _format_new_item, False)
 
     # alias start
     for tmp_idx in range(len(_preset_cfg['_alias_ori_item'])):
         _alias_ori_item = _preset_cfg['_alias_ori_item'][tmp_idx]
         _alias_new_item = _preset_cfg['_alias_new_item'][tmp_idx]
 
-        if _alias_ori_item in data_base.keys():
-            if _alias_new_item not in data_base.keys():
-                is_value = check_data_is_all_value(data_base[_alias_ori_item])
+        if _alias_ori_item in data_base.keys() and _alias_new_item not in data_base.keys():
+            is_value = check_data_is_all_value(data_base[_alias_ori_item])
 
-                data_base = data_base_insert_data(
-                    data_base, data_base[_alias_ori_item],
-                    _alias_new_item, is_value)
+            data_base = data_base_insert_data(
+                data_base, data_base[_alias_ori_item],
+                _alias_new_item, is_value)
     # alias stop
 
     # calculation start
@@ -577,8 +574,8 @@ def get_data_from_file():
                 data_base.keys()) or _post_item_01 in data_base.keys():
             post_operation_valid = True
             if _post_item_02 in data_base.keys():
-                post_operation_valid = bool(check_data_is_all_value(data_base[_post_item_01]) and \
-                        check_data_is_all_value(data_base[_post_item_02]))
+                post_operation_valid = bool(check_data_is_all_value(data_base[_post_item_01]) and
+                                            check_data_is_all_value(data_base[_post_item_02]))
             else:
                 if check_data_is_all_value(data_base[_post_item_01]) and \
                         check_data_is_all_value(_post_item_02):
@@ -906,12 +903,11 @@ class LogFigure:
             if tmp_record_color_array in database:
                 ori_color = database[tmp_record_color_array]
                 tmp_color = find_word_after_prefix(ori_color, "dark")
-                if tmp_color == "":
-                    if database[tmp_record_color_array] in WITH_DARK_COLOR:
-                        tmp_color = "dark" + database[tmp_record_color_array]
-                        cur_color = tmp_color
-                        self.with_dark_fig_count += 1
-                        cur_alpha = 0.3
+                if tmp_color == "" and database[tmp_record_color_array] in WITH_DARK_COLOR:
+                    tmp_color = "dark" + database[tmp_record_color_array]
+                    cur_color = tmp_color
+                    self.with_dark_fig_count += 1
+                    cur_alpha = 0.3
 
         database[record_color_array] = cur_color
 
@@ -966,9 +962,8 @@ class LogFigure:
                                  color=cur_color, zorder=cur_zorder+1)
             self.cur_annotate_count += 1
         else:
-            if host_flag:
-                if self.share_y_axis_times == 1:  # last data
-                    para.get_yaxis().set_visible(False)
+            if host_flag and self.share_y_axis_times == 1:  # last data
+                para.get_yaxis().set_visible(False)
 
             if self.share_y_axis_times > 0:
                 self.share_y_axis_times -= 1
