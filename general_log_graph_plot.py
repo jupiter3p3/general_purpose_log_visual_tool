@@ -767,7 +767,7 @@ class LogFigure:
         monitors = EnumDisplayMonitors()
 
         windows_version = platform().split('-')[1]
-        if windows_version == '10' or windows_version == '8':
+        if windows_version in ('10', '8'):
             win8_higher_os_flag = True
         elif int(windows_version) >= 8:
             win8_higher_os_flag = True
