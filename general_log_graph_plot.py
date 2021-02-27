@@ -320,8 +320,7 @@ def find_chip_name(line_data):
 def check_data_line(line_data):
     if '= ' in line_data:
         return True
-    else:
-        return False
+    return False
 
 
 def remove_time_stamp_in_prefix(line_data):
@@ -329,8 +328,7 @@ def remove_time_stamp_in_prefix(line_data):
 
     if len(found) == 0:
         return line_data
-    else:
-        return line_data[len(found[0]):]
+    return line_data[len(found[0]):]
 
 
 def data_base_insert_data(data_base, new_data, data_key, value_flag):
@@ -688,8 +686,7 @@ def get_plot_data_without_le(data):
 def get_plot_data(data, with_le):  # with_le shold be True if data is non-value
     if with_le:
         return get_plot_data_with_le(data)
-    else:
-        return get_plot_data_without_le(data), []
+    return get_plot_data_without_le(data), []
 
 
 def make_patch_spines_invisible(ax):
