@@ -357,6 +357,7 @@ def get_data_from_file():
         file_path = filedialog.askopenfilename()
         fr = open(file_path, "r", encoding='utf-8')
         fl = fr.readlines()
+
     else:
         fl = "key_001/ key_002/ key_003  = data_001/ data_002/ data_003"
 
@@ -1044,72 +1045,72 @@ def main():
     cfg_file_with_path = join(CFG_FILE_PATH, CFG_FILE)
     cfg_ref_file_with_path = join(cur_path, CFG_REF_FILE)
 
-    fw = open(cfg_ref_file_with_path, "w")
-    for key in data_base.keys():
-        if key not in RESERVED_WORDS:
-            f_data = "%s\n" % (key)
-            fw.write(f_data)
-    fw.close()
-
-    fr = open(cfg_file_with_path, "r")
-
-    fl = fr.read().splitlines()
+    with open(cfg_ref_file_with_path, 'w') as fw:
+        for key in data_base.keys():
+            if key not in RESERVED_WORDS:
+                f_data = "%s\n" % (key)
+                fw.write(f_data)
+        fw.close()
 
     fig.append(LogFigure())  # first figure
     fig[-1].gen_new_figure()
     first_fig_flag = True
-
     avg_flag = False
 
-    for line_data in fl:
-        new_fig_title = find_word_between_two_words(line_data, '\\[', "\\]")
-        operation_item = find_word_between_two_words(line_data,
-                                                     '\\<', "\\>")
+    with open(cfg_file_with_path, "r") as f:
+        fr = f.read()
+        fl = fr.splitlines()
 
-        if new_fig_title != "":  # new figure
-            if first_fig_flag:
-                first_fig_flag = False
-                fig[-1].set_title(new_fig_title)
-            else:
-                fig[-1].plot_figure()
-                fig.append(LogFigure())  # first figure
-                fig[-1].gen_new_figure()
-                fig[-1].set_title(new_fig_title)
+        for line_data in fl:
+            new_fig_title = find_word_between_two_words(
+                line_data, '\\[', "\\]")
+            operation_item = find_word_between_two_words(line_data,
+                                                         '\\<', "\\>")
 
-            if(len(_preset_cfg['_time_step_sec']) > 0):
-                step_sec = _preset_cfg['_time_step_sec'][-1]
-                if(check_data_is_all_value(step_sec)):
-                    fig[-1].set_time_step_sec(float(step_sec))
-        elif operation_item != "":  # share y axis
-            if operation_item.isnumeric():
-                fig[-1].set_share_y_axis_times(float(operation_item))
-            elif operation_item == "avg":
-                avg_flag = True
-            elif operation_item == "show max":
-                fig[-1].set_show_max(True)
-            elif operation_item == "show min":
-                fig[-1].set_show_min(True)
-            elif operation_item == "hide max":
-                fig[-1].set_show_max(False)
-            elif operation_item == "hide min":
-                fig[-1].set_show_min(False)
-
-        else:  # data only
-            if not avg_flag:
-                fig[-1].gen_figure(data_base, line_data)
+            if new_fig_title != "":  # new figure
                 if first_fig_flag:
                     first_fig_flag = False
-            else:  # average the data and name original_name_avg
-                if line_data in data_base:
-                    tmp_data_len = len(data_base[line_data])
-                    try:
-                        tmp_avg = sum(data_base[line_data]) / tmp_data_len
-                    except TypeError:
-                        tmp_avg = -0.01
+                    fig[-1].set_title(new_fig_title)
+                else:
+                    fig[-1].plot_figure()
+                    fig.append(LogFigure())  # first figure
+                    fig[-1].gen_new_figure()
+                    fig[-1].set_title(new_fig_title)
 
-                    new_name = line_data + "_avg"
-                    data_base[new_name] = [tmp_avg] * tmp_data_len
-                avg_flag = False
+                if(len(_preset_cfg['_time_step_sec']) > 0):
+                    step_sec = _preset_cfg['_time_step_sec'][-1]
+                    if(check_data_is_all_value(step_sec)):
+                        fig[-1].set_time_step_sec(float(step_sec))
+            elif operation_item != "":  # share y axis
+                if operation_item.isnumeric():
+                    fig[-1].set_share_y_axis_times(float(operation_item))
+                elif operation_item == "avg":
+                    avg_flag = True
+                elif operation_item == "show max":
+                    fig[-1].set_show_max(True)
+                elif operation_item == "show min":
+                    fig[-1].set_show_min(True)
+                elif operation_item == "hide max":
+                    fig[-1].set_show_max(False)
+                elif operation_item == "hide min":
+                    fig[-1].set_show_min(False)
+
+            else:  # data only
+                if not avg_flag:
+                    fig[-1].gen_figure(data_base, line_data)
+                    if first_fig_flag:
+                        first_fig_flag = False
+                else:  # average the data and name original_name_avg
+                    if line_data in data_base:
+                        tmp_data_len = len(data_base[line_data])
+                        try:
+                            tmp_avg = sum(data_base[line_data]) / tmp_data_len
+                        except TypeError:
+                            tmp_avg = -0.01
+
+                        new_name = line_data + "_avg"
+                        data_base[new_name] = [tmp_avg] * tmp_data_len
+                    avg_flag = False
 
     fig[-1].plot_figure()  # last figure
 
