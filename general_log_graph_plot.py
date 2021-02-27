@@ -134,7 +134,8 @@ def update_cfg_files():
             if tmp_line[0] != '#':
                 CFG_REF_FILE = tmp_line
     if CFG_REF_FILE is None:
-        filename_with_path, ext_name = splitext(CFG_FILE)
+        #  filename_with_path, ext_name = splitext(CFG_FILE)
+        filename_with_path = splitext(CFG_FILE)[0]
         CFG_REF_FILE = join(CFG_FILE_PATH, basename(filename_with_path) +
                             "_possible_items.glgp_plot")
 
