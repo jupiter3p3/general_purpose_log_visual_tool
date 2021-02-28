@@ -164,6 +164,26 @@ def update_cfg_files(_cfg_files):
                                        "_possible_items.glgp_plot")
 
 
+def post_process_to_preset_cfg(preset_cfg, line_data):
+    tmp_line = line_data.split(";")
+    for i, item in enumerate(tmp_line):
+        tmp_line[i] = item.strip()
+    if(len(tmp_line) == 4):
+        preset_cfg.data['_post_new_item'].append(tmp_line[0])
+        preset_cfg.data['_post_item_01'].append(tmp_line[1])
+        preset_cfg.data['_post_op_code'].append(tmp_line[2])
+        preset_cfg.data['_post_item_02'].append(tmp_line[3])
+
+    elif(len(tmp_line) == 2):
+        preset_cfg.data['_trans_item'].append(tmp_line[0])
+        preset_cfg.data['_trans_op_code'].append(tmp_line[1])
+    elif(len(tmp_line) == 5 and tmp_line[1] == 'fmt'):
+        preset_cfg.data['_format_new_item'].append(tmp_line[0])
+        preset_cfg.data['_format_item_01'].append(tmp_line[2])
+        preset_cfg.data['_format_item_02'].append(tmp_line[3])
+        preset_cfg.data['_format_format'].append(tmp_line[4])
+
+
 def add_data_to_preset_cfg(preset_cfg, preset_mode, line_data, tmp_line):
     if preset_mode == "replace_words":
         tmp_line = line_data.split("=")
@@ -179,23 +199,7 @@ def add_data_to_preset_cfg(preset_cfg, preset_mode, line_data, tmp_line):
     elif preset_mode == "key_value_separate":
         preset_cfg.data['_key_value_sep'].append(tmp_line)
     elif preset_mode == "post_process":
-        tmp_line = line_data.split(";")
-        for i, item in enumerate(tmp_line):
-            tmp_line[i] = item.strip()
-        if(len(tmp_line) == 4):
-            preset_cfg.data['_post_new_item'].append(tmp_line[0])
-            preset_cfg.data['_post_item_01'].append(tmp_line[1])
-            preset_cfg.data['_post_op_code'].append(tmp_line[2])
-            preset_cfg.data['_post_item_02'].append(tmp_line[3])
-
-        elif(len(tmp_line) == 2):
-            preset_cfg.data['_trans_item'].append(tmp_line[0])
-            preset_cfg.data['_trans_op_code'].append(tmp_line[1])
-        elif(len(tmp_line) == 5 and tmp_line[1] == 'fmt'):
-            preset_cfg.data['_format_new_item'].append(tmp_line[0])
-            preset_cfg.data['_format_item_01'].append(tmp_line[2])
-            preset_cfg.data['_format_item_02'].append(tmp_line[3])
-            preset_cfg.data['_format_format'].append(tmp_line[4])
+        post_process_to_preset_cfg(preset_cfg, line_data)
     elif preset_mode == "alias":
         tmp_line = line_data.split(";")
         for i, item in enumerate(tmp_line):
