@@ -1053,6 +1053,24 @@ def init_cur_fig(cur_fig, version_info, screen_dpi):
     cur_fig.gen_new_figure()
 
 
+def fig_operation(fig, operation_item, avg_flag):
+    # def fig_operation(fig, operation_item):
+    #avg_flag_final = False
+    if operation_item.isnumeric():
+        fig.set_share_y_axis_times(float(operation_item))
+    elif operation_item == "avg":
+        avg_flag = True
+    elif operation_item == "show max":
+        fig.set_show_max(True)
+    elif operation_item == "show min":
+        fig.set_show_min(True)
+    elif operation_item == "hide max":
+        fig.set_show_max(False)
+    elif operation_item == "hide min":
+        fig.set_show_min(False)
+    return avg_flag
+
+
 def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi, fig):
     first_fig_flag = True
     avg_flag = False
@@ -1084,19 +1102,7 @@ def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi
                     if(check_data_is_all_value(step_sec)):
                         fig[-1].set_time_step_sec(float(step_sec))
             elif operation_item != "":  # share y axis
-                if operation_item.isnumeric():
-                    fig[-1].set_share_y_axis_times(float(operation_item))
-                elif operation_item == "avg":
-                    avg_flag = True
-                elif operation_item == "show max":
-                    fig[-1].set_show_max(True)
-                elif operation_item == "show min":
-                    fig[-1].set_show_min(True)
-                elif operation_item == "hide max":
-                    fig[-1].set_show_max(False)
-                elif operation_item == "hide min":
-                    fig[-1].set_show_min(False)
-
+                avg_flag = fig_operation(fig[-1], operation_item, avg_flag)
             else:  # data only
                 if not avg_flag:
                     fig[-1].gen_figure(database, line_data)
