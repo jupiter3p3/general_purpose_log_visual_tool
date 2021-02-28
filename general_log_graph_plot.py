@@ -69,9 +69,10 @@ g_total_fig_num = 0
 
 g_screen_dpi = 96
 
-g_screen_ratio_check = False
-g_ratio_x = 1.0
-g_ratio_y = 1.0
+
+class LogDatabase:
+    def __init__(self):
+        self.data_base = {}
 
 
 def check_data_is_all_value(data):
@@ -345,14 +346,13 @@ def data_base_insert_data(data_base, new_data, data_key, value_flag):
 
 
 def get_data_from_file():
-    global g_screen_dpi
     global data_base
     product_name_found_flag = False
     non_value_keys = []
     value_keys = []
 
     root = tk.Tk()
-    g_screen_dpi = root.winfo_pixels('1i')
+    screen_dpi = root.winfo_pixels('1i')
     root.tk.call('tk', 'scaling', 10.0)
     root.withdraw()
 
@@ -661,7 +661,7 @@ def get_data_from_file():
                     data_base, data_tmp_array, _trans_item, True)
     # trans_data end
 
-    return data_base
+    return data_base, screen_dpi
 
 
 def get_plot_data_with_le(data):
@@ -734,6 +734,10 @@ class LogFigure:
         self.show_min = False
         self.fig = None
         self.host = None
+        self.ratio_x = 1.0
+        self.ratio_y = 1.0
+        self.screen_ratio_check = False
+        self.screen_dpi = 96
 
     def set_show_max(self, flag):
         self.show_max = flag
@@ -753,11 +757,10 @@ class LogFigure:
     def set_title(self, title):
         self.title = title
 
+    def set_screen_dpi(self, screen_dpi):
+     self.screen_dpi = screen_dpi
+
     def gen_new_figure(self):
-        global g_screen_ratio_check
-        global g_screen_dpi
-        global g_ratio_x
-        global g_ratio_y
         self.cur_data_count = 0
         win8_higher_os_flag = False
 
@@ -825,15 +828,15 @@ class LogFigure:
                 debug_print(f"Monitor (hmonitor: {monitor[0]}) = dpiX:\
                             {dpiX.value}, dpiY: {dpiY.value}")
 
-        tmp_dpi = g_screen_dpi
+        tmp_dpi = self.screen_dpi
 
-        if not g_screen_ratio_check:
-            g_ratio_x = float(GetSystemMetrics(0)/disp_x_size_pixel)
-            g_ratio_y = float(GetSystemMetrics(1)/disp_y_size_pixel)
-            g_screen_ratio_check = True
+        if not self.screen_ratio_check:
+            self.ratio_x = float(GetSystemMetrics(0)/disp_x_size_pixel)
+            self.ratio_y = float(GetSystemMetrics(1)/disp_y_size_pixel)
+            self.screen_ratio_check = True
 
-        x_size_inch = g_ratio_x * GetSystemMetrics(0) / 2 / tmp_dpi
-        y_size_inch = g_ratio_y * GetSystemMetrics(1) / 2 / tmp_dpi * 0.88
+        x_size_inch = self.ratio_x * GetSystemMetrics(0) / 2 / tmp_dpi
+        y_size_inch = self.ratio_y * GetSystemMetrics(1) / 2 / tmp_dpi * 0.88
 
         self.fig, self.host = plt.subplots(figsize=(x_size_inch, y_size_inch))
 
@@ -1042,7 +1045,8 @@ class LogFigure:
 def main():
     update_cfg_files()
     get_preset_cfg_from_file()
-    data_base = get_data_from_file()
+    data_base, screen_dpi = get_data_from_file()
+    LogFigure().set_screen_dpi(screen_dpi)
     fig = []
     # cur_path = getcwd()
     cur_path = dirname(__file__)
