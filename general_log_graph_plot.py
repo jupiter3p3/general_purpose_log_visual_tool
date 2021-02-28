@@ -268,7 +268,9 @@ def get_win_pos_cfg(index):
 
 
 def debug_print(data):
-    # print(data)
+    debug_flag = False
+    if debug_flag:
+        print(data)
 
 
 def label_incremental(array):
