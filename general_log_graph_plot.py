@@ -1053,38 +1053,12 @@ def init_cur_fig(cur_fig, version_info, screen_dpi):
     cur_fig.gen_new_figure()
 
 
-def main():
-    _cfg_files = CfgFiles()
-    update_cfg_files(_cfg_files)
-    preset_cfg = PresetCfg()
-
-    preset_file = _cfg_files.preset_file
-    get_preset_cfg_from_file(preset_file, preset_cfg)
-    log_data = LogDatabase()
-    log_data.database, screen_dpi = get_data_from_file(
-        log_data.database, preset_cfg)
-    database = log_data.database
-    fig = []
-    # cur_path = getcwd()
-    cur_path = dirname(__file__)
-    cfg_file_with_path = join(_cfg_files.cfg_file_path, _cfg_files.plot_file)
-    cfg_ref_file_with_path = join(cur_path, _cfg_files.ref_file)
-    version_info = CodeVersionInfo()
-
-    with open(cfg_ref_file_with_path, 'w') as fw:
-        for key in database.keys():
-            if key not in RESERVED_WORDS:
-                f_data = "%s\n" % (key)
-                fw.write(f_data)
-        fw.close()
-
-    fig.append(LogFigure())  # first figure
-    init_cur_fig(fig[-1], version_info, screen_dpi)
+def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi, fig):
     first_fig_flag = True
     avg_flag = False
     cur_fig_num = 0
-
     with open(cfg_file_with_path, "r") as f:
+
         fr = f.read()
         fl = fr.splitlines()
 
@@ -1125,12 +1099,12 @@ def main():
 
             else:  # data only
                 if not avg_flag:
-                    fig[-1].gen_figure(log_data.database, line_data)
+                    fig[-1].gen_figure(database, line_data)
                     if first_fig_flag:
                         first_fig_flag = False
                 else:  # average the data and name original_name_avg
                     if line_data in database:
-                        tmp_data_len = len(log_data.database[line_data])
+                        tmp_data_len = len(database[line_data])
                         try:
                             tmp_avg = sum(database[line_data]) / tmp_data_len
                         except TypeError:
@@ -1139,6 +1113,39 @@ def main():
                         new_name = line_data + "_avg"
                         database[new_name] = [tmp_avg] * tmp_data_len
                     avg_flag = False
+    return cur_fig_num
+
+
+def main():
+    _cfg_files = CfgFiles()
+    update_cfg_files(_cfg_files)
+    preset_cfg = PresetCfg()
+
+    preset_file = _cfg_files.preset_file
+    get_preset_cfg_from_file(preset_file, preset_cfg)
+    log_data = LogDatabase()
+    log_data.database, screen_dpi = get_data_from_file(
+        log_data.database, preset_cfg)
+    database = log_data.database
+    fig = []
+    # cur_path = getcwd()
+    cur_path = dirname(__file__)
+    cfg_file_with_path = join(_cfg_files.cfg_file_path, _cfg_files.plot_file)
+    cfg_ref_file_with_path = join(cur_path, _cfg_files.ref_file)
+    version_info = CodeVersionInfo()
+
+    with open(cfg_ref_file_with_path, 'w') as fw:
+        for key in database.keys():
+            if key not in RESERVED_WORDS:
+                f_data = "%s\n" % (key)
+                fw.write(f_data)
+        fw.close()
+
+    fig.append(LogFigure())  # first figure
+    init_cur_fig(fig[-1], version_info, screen_dpi)
+
+    cur_fig_num = plot_figs(cfg_file_with_path, preset_cfg,
+                            database, version_info, screen_dpi, fig)
 
     fig[-1].set_total_fig_num(cur_fig_num)
     fig[-1].plot_figure()  # last figure
