@@ -5,6 +5,7 @@ To generatelog visual graph
 # Version|Date       |Author     |Note                                  |
 # 0.0.1  |20210217   |jupiter    |Draft version                         |
 # 0.0.2  |20210226   |jupiter    |Move configuration files to 'cfg'     |
+# 0.0.3  |20210228   |jupiter    |Check code via DeepSource and fix it  |
 '''
 
 from os.path import dirname
@@ -34,8 +35,8 @@ from os.path import abspath
 
 class CodeVersionInfo:
     def __init__(self):
-        self.code_version = "0.0.2"
-        self.version_date = "20210226"
+        self.code_version = "0.0.3"
+        self.version_date = "20210228"
 
 
 le = LabelEncoder()
