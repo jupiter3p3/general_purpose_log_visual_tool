@@ -732,6 +732,8 @@ class LogFigure:
         self.with_dark_fig_count = 0
         self.show_max = False
         self.show_min = False
+        self.fig = None
+        self.host = None
 
     def set_show_max(self, flag):
         self.show_max = flag
