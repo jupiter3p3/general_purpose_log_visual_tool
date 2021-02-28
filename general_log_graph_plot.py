@@ -65,10 +65,6 @@ _preset_cfg = {}
 
 RESERVED_WORDS = ["product_name", "value_keys", "non_value_keys"]
 
-g_total_fig_num = 0
-
-g_screen_dpi = 96
-
 
 class LogDatabase:
     def __init__(self):
@@ -738,6 +734,7 @@ class LogFigure:
         self.ratio_y = 1.0
         self.screen_ratio_check = False
         self.screen_dpi = 96
+        self.total_fig_num = 0
 
     def set_show_max(self, flag):
         self.show_max = flag
@@ -758,7 +755,10 @@ class LogFigure:
         self.title = title
 
     def set_screen_dpi(self, screen_dpi):
-     self.screen_dpi = screen_dpi
+        self.screen_dpi = screen_dpi
+
+    def set_total_fig_num(self, total_fig_num):
+        self.total_fig_num = total_fig_num
 
     def gen_new_figure(self):
         self.cur_data_count = 0
@@ -987,10 +987,9 @@ class LogFigure:
         self.cur_data_count += 1
 
     def plot_figure(self):
-        global g_total_fig_num
         lines = self.pictures
         cur_numeric_count = 0
-        self.set_win_position(g_total_fig_num)
+        self.set_win_position(self.total_fig_num)
 
         tkw = dict(size=len(self.parameters)+1, width=1.5)  # Same color
         for tmp_idx in range(len(self.parameters)):
@@ -1039,14 +1038,14 @@ class LogFigure:
             thismanager.window.move(get_win_pos_cfg(self.win_position)[0],
                                     get_win_pos_cfg(self.win_position)[1])
 
-        g_total_fig_num += 1
+        self.total_fig_num += 1
+        return self.total_fig_num
 
 
 def main():
     update_cfg_files()
     get_preset_cfg_from_file()
     data_base, screen_dpi = get_data_from_file()
-    LogFigure().set_screen_dpi(screen_dpi)
     fig = []
     # cur_path = getcwd()
     cur_path = dirname(__file__)
@@ -1061,9 +1060,11 @@ def main():
         fw.close()
 
     fig.append(LogFigure())  # first figure
+    fig[-1].set_screen_dpi(screen_dpi)
     fig[-1].gen_new_figure()
     first_fig_flag = True
     avg_flag = False
+    cur_fig_num = 0
 
     with open(cfg_file_with_path, "r") as f:
         fr = f.read()
@@ -1080,8 +1081,10 @@ def main():
                     first_fig_flag = False
                     fig[-1].set_title(new_fig_title)
                 else:
-                    fig[-1].plot_figure()
+                    fig[-1].set_total_fig_num(cur_fig_num)
+                    cur_fig_num = fig[-1].plot_figure()
                     fig.append(LogFigure())  # first figure
+                    fig[-1].set_screen_dpi(screen_dpi)
                     fig[-1].gen_new_figure()
                     fig[-1].set_title(new_fig_title)
 
@@ -1120,6 +1123,7 @@ def main():
                         data_base[new_name] = [tmp_avg] * tmp_data_len
                     avg_flag = False
 
+    fig[-1].set_total_fig_num(cur_fig_num)
     fig[-1].plot_figure()  # last figure
 
     plt.ion()
