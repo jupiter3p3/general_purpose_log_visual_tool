@@ -125,8 +125,8 @@ def update_cfg_files(_cfg_files):
     if not isfile(_cfg_files.cfg_file_with_path):
         _cfg_files.cfg_file_path = dirname(abspath(__file__))
 
-    cfg_file_with_path = join(_cfg_files.cfg_file_path,
-                              _cfg_files.global_setting_file)
+    _cfg_files.cfg_file_with_path = join(_cfg_files.cfg_file_path,
+                                         _cfg_files.global_setting_file)
 
     possible_key_words = ["preset_file", "plot_items_file",
                           "dump_possible_items_file"]
@@ -492,7 +492,7 @@ def get_data_from_file(database, preset_cfg):
                     if key in database:
                         loss_data_len = cur_len - 1 - len(database[key])
                         if loss_data_len > 0:
-                            for tmp_idx_loss in range(loss_data_len):
+                            for _ in range(loss_data_len):
                                 if key in value_keys:
                                     key_val_redundancy = -0.01
                                 else:
