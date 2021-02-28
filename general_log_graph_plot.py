@@ -164,6 +164,50 @@ def update_cfg_files(_cfg_files):
                                        "_possible_items.glgp_plot")
 
 
+def add_data_to_preset_cfg(preset_cfg, preset_mode, line_data, tmp_line):
+    if preset_mode == "replace_words":
+        tmp_line = line_data.split("=")
+        if(len(tmp_line) == 2):
+            for i, item in enumerate(tmp_line):
+                tmp_line[i] = item.strip()
+            preset_cfg.data['_old_words'].append(tmp_line[0])
+            preset_cfg.data['_new_words'].append(tmp_line[1])
+    elif preset_mode == "remove_words":
+        preset_cfg.data['_remove_words'].append(tmp_line)
+    elif preset_mode == "data_segment":
+        preset_cfg.data['_data_seg'].append(tmp_line)
+    elif preset_mode == "key_value_separate":
+        preset_cfg.data['_key_value_sep'].append(tmp_line)
+    elif preset_mode == "post_process":
+        tmp_line = line_data.split(";")
+        for i, item in enumerate(tmp_line):
+            tmp_line[i] = item.strip()
+        if(len(tmp_line) == 4):
+            preset_cfg.data['_post_new_item'].append(tmp_line[0])
+            preset_cfg.data['_post_item_01'].append(tmp_line[1])
+            preset_cfg.data['_post_op_code'].append(tmp_line[2])
+            preset_cfg.data['_post_item_02'].append(tmp_line[3])
+
+        elif(len(tmp_line) == 2):
+            preset_cfg.data['_trans_item'].append(tmp_line[0])
+            preset_cfg.data['_trans_op_code'].append(tmp_line[1])
+        elif(len(tmp_line) == 5 and tmp_line[1] == 'fmt'):
+            preset_cfg.data['_format_new_item'].append(tmp_line[0])
+            preset_cfg.data['_format_item_01'].append(tmp_line[2])
+            preset_cfg.data['_format_item_02'].append(tmp_line[3])
+            preset_cfg.data['_format_format'].append(tmp_line[4])
+    elif preset_mode == "alias":
+        tmp_line = line_data.split(";")
+        for i, item in enumerate(tmp_line):
+            tmp_line[i] = item.strip()
+        if(len(tmp_line) == 2):
+            preset_cfg.data['_alias_new_item'].append(tmp_line[0])
+            preset_cfg.data['_alias_ori_item'].append(tmp_line[1])
+    elif preset_mode == 'time_step_sec':
+        tmp_line = line_data.strip()
+        preset_cfg.data['_time_step_sec'].append(tmp_line)
+
+
 def get_preset_cfg_from_file(preset_file, preset_cfg):
     with open(preset_file, "r", encoding='utf-8') as f:
         fr = f.read()
@@ -188,48 +232,8 @@ def get_preset_cfg_from_file(preset_file, preset_cfg):
                 continue
             if(tmp_line[0] == '#'):
                 continue
-
-            if preset_mode == "replace_words":
-                tmp_line = line_data.split("=")
-                if(len(tmp_line) == 2):
-                    for i, item in enumerate(tmp_line):
-                        tmp_line[i] = item.strip()
-                    preset_cfg.data['_old_words'].append(tmp_line[0])
-                    preset_cfg.data['_new_words'].append(tmp_line[1])
-            elif preset_mode == "remove_words":
-                preset_cfg.data['_remove_words'].append(tmp_line)
-            elif preset_mode == "data_segment":
-                preset_cfg.data['_data_seg'].append(tmp_line)
-            elif preset_mode == "key_value_separate":
-                preset_cfg.data['_key_value_sep'].append(tmp_line)
-            elif preset_mode == "post_process":
-                tmp_line = line_data.split(";")
-                for i, item in enumerate(tmp_line):
-                    tmp_line[i] = item.strip()
-                if(len(tmp_line) == 4):
-                    preset_cfg.data['_post_new_item'].append(tmp_line[0])
-                    preset_cfg.data['_post_item_01'].append(tmp_line[1])
-                    preset_cfg.data['_post_op_code'].append(tmp_line[2])
-                    preset_cfg.data['_post_item_02'].append(tmp_line[3])
-
-                elif(len(tmp_line) == 2):
-                    preset_cfg.data['_trans_item'].append(tmp_line[0])
-                    preset_cfg.data['_trans_op_code'].append(tmp_line[1])
-                elif(len(tmp_line) == 5 and tmp_line[1] == 'fmt'):
-                    preset_cfg.data['_format_new_item'].append(tmp_line[0])
-                    preset_cfg.data['_format_item_01'].append(tmp_line[2])
-                    preset_cfg.data['_format_item_02'].append(tmp_line[3])
-                    preset_cfg.data['_format_format'].append(tmp_line[4])
-            elif preset_mode == "alias":
-                tmp_line = line_data.split(";")
-                for i, item in enumerate(tmp_line):
-                    tmp_line[i] = item.strip()
-                if(len(tmp_line) == 2):
-                    preset_cfg.data['_alias_new_item'].append(tmp_line[0])
-                    preset_cfg.data['_alias_ori_item'].append(tmp_line[1])
-            elif preset_mode == 'time_step_sec':
-                tmp_line = line_data.strip()
-                preset_cfg.data['_time_step_sec'].append(tmp_line)
+            add_data_to_preset_cfg(
+                preset_cfg, preset_mode, line_data, tmp_line)
 
 
 def get_win_pos_cfg(index):
@@ -1165,3 +1169,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
