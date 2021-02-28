@@ -32,21 +32,13 @@ from os.path import abspath
 # from os import chdir
 
 
-VERSION_CODE = "0.0.2"
-VERSION_DATE = "20210226"
-CFG_FILE = "load_default.glgp_plot"
-CFG_REF_FILE = None
-PRESET_FILE = "load_default.glgp_preset"
-
-filename_with_path, ext_name = splitext(__file__)
-GLOBAL_SETTING_FILE = basename(filename_with_path) + ".cfg"
-
-CFG_FILE_PATH = join(dirname(abspath(__file__)), "cfg")
+class CodeVersionInfo:
+    def __init__(self):
+        self.code_version = "0.0.2"
+        self.version_date = "20210226"
 
 
 le = LabelEncoder()
-
-DEBUG_FLAG = False
 
 COLOR_SEQ = ["black", "blue", "red", "green", "orange", "seagreen"]
 for tmp_color in ["goldenrod", "slateblue", "magenta", "cyan", "orchid"]:
@@ -60,15 +52,54 @@ for tmp_color in ["seagreen", "slategray", "cyan", "turquoise", "blue"]:
 for tmp_color in ["slateblue", "orchid", "violet", "magenta"]:
     WITH_DARK_COLOR.append(tmp_color)
 
-data_base = {}
-_preset_cfg = {}
+# database = {}
 
 RESERVED_WORDS = ["product_name", "value_keys", "non_value_keys"]
 
 
+class CfgFiles:
+    def __init__(self):
+        self.plot_file = "load_default.glgp_plot"
+        self.ref_file = None
+        self.preset_file = "load_default.glgp_preset"
+
+        self.filename_with_path, self.ext_name = splitext(__file__)
+        self.global_setting_file = basename(self.filename_with_path) + ".cfg"
+
+        self.cfg_file_path = join(dirname(abspath(__file__)), "cfg")
+
+
+class PresetCfg:
+    def __init__(self):
+        self.data = {}
+        self.data['_old_words'] = []
+        self.data['_new_words'] = []
+        self.data['_remove_words'] = []
+        self.data['_data_seg'] = []
+        self.data['_key_value_sep'] = []
+
+        self.data['_post_new_item'] = []
+        self.data['_post_item_01'] = []
+        self.data['_post_op_code'] = []
+        self.data['_post_item_02'] = []
+
+        self.data['_trans_item'] = []
+        self.data['_trans_op_code'] = []
+
+        self.data['_format_new_item'] = []
+        self.data['_format_format'] = []
+        self.data['_format_item_01'] = []
+        self.data['_format_item_02'] = []
+
+        self.data['_alias_new_item'] = []
+        self.data['_alias_ori_item'] = []
+
+        self.data['_time_step_sec'] = []
+
+
 class LogDatabase:
     def __init__(self):
-        self.data_base = {}
+        self.database = {}
 
 
 def check_data_is_all_value(data):
@@ -88,23 +119,19 @@ def check_data_is_all_value(data):
     return is_value
 
 
-def update_cfg_files():
-    global GLOBAL_SETTING_FILE
-    global CFG_FILE
-    global CFG_REF_FILE
-    global PRESET_FILE
-    global CFG_FILE_PATH
+def update_cfg_files(_cfg_files):
+    _cfg_files.cfg_file_with_path = join(
+        _cfg_files.cfg_file_path, _cfg_files.global_setting_file)
+    if not isfile(_cfg_files.cfg_file_with_path):
+        _cfg_files.cfg_file_path = dirname(abspath(__file__))
 
-    cfg_file_with_path = join(CFG_FILE_PATH, GLOBAL_SETTING_FILE)
-    if not isfile(cfg_file_with_path):
-        CFG_FILE_PATH = dirname(abspath(__file__))
-
-    cfg_file_with_path = join(CFG_FILE_PATH, GLOBAL_SETTING_FILE)
+    cfg_file_with_path = join(_cfg_files.cfg_file_path,
+                              _cfg_files.global_setting_file)
 
     possible_key_words = ["preset_file", "plot_items_file",
                           "dump_possible_items_file"]
 
-    with open(cfg_file_with_path, "r", encoding='utf-8') as f:
+    with open(_cfg_files.cfg_file_with_path, "r", encoding='utf-8') as f:
         fr = f.read()
         fl = fr.splitlines()
 
@@ -121,56 +148,28 @@ def update_cfg_files():
                 continue
 
             tmp_line = line_data.strip()
-            tmp_line = join(CFG_FILE_PATH, tmp_line)
+            tmp_line = join(_cfg_files.cfg_file_path, tmp_line)
 
             if isfile(tmp_line):
                 if cur_file_type == "preset_file":
-                    PRESET_FILE = tmp_line
+                    _cfg_files.preset_file = tmp_line
                 elif cur_file_type == "plot_items_file":
-                    CFG_FILE = tmp_line
+                    _cfg_files.plot_file = tmp_line
             elif cur_file_type == "dump_possible_items_file" and tmp_line[0] != '#':
-                CFG_REF_FILE = tmp_line
-        if CFG_REF_FILE is None:
-            #  filename_with_path, ext_name = splitext(CFG_FILE)
-            filename_with_path = splitext(CFG_FILE)[0]
-            CFG_REF_FILE = join(CFG_FILE_PATH, basename(filename_with_path) +
-                                "_possible_items.glgp_plot")
+                _cfg_files.ref_file = tmp_line
+        if _cfg_files.ref_file is None:
+            filename_with_path = splitext(_cfg_files.plot_file)[0]
+            _cfg_files.ref_file = join(_cfg_files.cfg_file_path, basename(filename_with_path) +
+                                       "_possible_items.glgp_plot")
 
 
-def get_preset_cfg_from_file():
-    global _preset_cfg
-    global PRESET_FILE
-
-    with open(PRESET_FILE, "r", encoding='utf-8') as f:
+def get_preset_cfg_from_file(preset_file, preset_cfg):
+    with open(preset_file, "r", encoding='utf-8') as f:
         fr = f.read()
         fl = fr.splitlines()
         possible_preset_modes = ["replace_words", "remove_words",
                                  "data_segment", "key_value_separate",
                                  "post_process", "alias", "time_step_sec"]
-
-        _preset_cfg['_old_words'] = []
-        _preset_cfg['_new_words'] = []
-        _preset_cfg['_remove_words'] = []
-        _preset_cfg['_data_seg'] = []
-        _preset_cfg['_key_value_sep'] = []
-
-        _preset_cfg['_post_new_item'] = []
-        _preset_cfg['_post_item_01'] = []
-        _preset_cfg['_post_op_code'] = []
-        _preset_cfg['_post_item_02'] = []
-
-        _preset_cfg['_trans_item'] = []
-        _preset_cfg['_trans_op_code'] = []
-
-        _preset_cfg['_format_new_item'] = []
-        _preset_cfg['_format_format'] = []
-        _preset_cfg['_format_item_01'] = []
-        _preset_cfg['_format_item_02'] = []
-
-        _preset_cfg['_alias_new_item'] = []
-        _preset_cfg['_alias_ori_item'] = []
-
-        _preset_cfg['_time_step_sec'] = []
 
         preset_mode = None
         for line_data in fl:
@@ -194,42 +193,42 @@ def get_preset_cfg_from_file():
                 if(len(tmp_line) == 2):
                     for tmp_idx in range(len(tmp_line)):
                         tmp_line[tmp_idx] = tmp_line[tmp_idx].strip()
-                    _preset_cfg['_old_words'].append(tmp_line[0])
-                    _preset_cfg['_new_words'].append(tmp_line[1])
+                    preset_cfg.data['_old_words'].append(tmp_line[0])
+                    preset_cfg.data['_new_words'].append(tmp_line[1])
             elif preset_mode == "remove_words":
-                _preset_cfg['_remove_words'].append(tmp_line)
+                preset_cfg.data['_remove_words'].append(tmp_line)
             elif preset_mode == "data_segment":
-                _preset_cfg['_data_seg'].append(tmp_line)
+                preset_cfg.data['_data_seg'].append(tmp_line)
             elif preset_mode == "key_value_separate":
-                _preset_cfg['_key_value_sep'].append(tmp_line)
+                preset_cfg.data['_key_value_sep'].append(tmp_line)
             elif preset_mode == "post_process":
                 tmp_line = line_data.split(";")
                 for tmp_idx in range(len(tmp_line)):
                     tmp_line[tmp_idx] = tmp_line[tmp_idx].strip()
                 if(len(tmp_line) == 4):
-                    _preset_cfg['_post_new_item'].append(tmp_line[0])
-                    _preset_cfg['_post_item_01'].append(tmp_line[1])
-                    _preset_cfg['_post_op_code'].append(tmp_line[2])
-                    _preset_cfg['_post_item_02'].append(tmp_line[3])
+                    preset_cfg.data['_post_new_item'].append(tmp_line[0])
+                    preset_cfg.data['_post_item_01'].append(tmp_line[1])
+                    preset_cfg.data['_post_op_code'].append(tmp_line[2])
+                    preset_cfg.data['_post_item_02'].append(tmp_line[3])
 
                 elif(len(tmp_line) == 2):
-                    _preset_cfg['_trans_item'].append(tmp_line[0])
-                    _preset_cfg['_trans_op_code'].append(tmp_line[1])
+                    preset_cfg.data['_trans_item'].append(tmp_line[0])
+                    preset_cfg.data['_trans_op_code'].append(tmp_line[1])
                 elif(len(tmp_line) == 5 and tmp_line[1] == 'fmt'):
-                    _preset_cfg['_format_new_item'].append(tmp_line[0])
-                    _preset_cfg['_format_item_01'].append(tmp_line[2])
-                    _preset_cfg['_format_item_02'].append(tmp_line[3])
-                    _preset_cfg['_format_format'].append(tmp_line[4])
+                    preset_cfg.data['_format_new_item'].append(tmp_line[0])
+                    preset_cfg.data['_format_item_01'].append(tmp_line[2])
+                    preset_cfg.data['_format_item_02'].append(tmp_line[3])
+                    preset_cfg.data['_format_format'].append(tmp_line[4])
             elif preset_mode == "alias":
                 tmp_line = line_data.split(";")
                 for tmp_idx in range(len(tmp_line)):
                     tmp_line[tmp_idx] = tmp_line[tmp_idx].strip()
                 if(len(tmp_line) == 2):
-                    _preset_cfg['_alias_new_item'].append(tmp_line[0])
-                    _preset_cfg['_alias_ori_item'].append(tmp_line[1])
+                    preset_cfg.data['_alias_new_item'].append(tmp_line[0])
+                    preset_cfg.data['_alias_ori_item'].append(tmp_line[1])
             elif preset_mode == 'time_step_sec':
                 tmp_line = line_data.strip()
-                _preset_cfg['_time_step_sec'].append(tmp_line)
+                preset_cfg.data['_time_step_sec'].append(tmp_line)
 
 
 def get_win_pos_cfg(index):
@@ -269,8 +268,7 @@ def get_win_pos_cfg(index):
 
 
 def debug_print(data):
-    global DEBUG_FLAG
-    if DEBUG_FLAG:
+    if False:
         print(data)
 
 
@@ -330,19 +328,18 @@ def remove_time_stamp_in_prefix(line_data):
     return line_data[len(found[0]):]
 
 
-def data_base_insert_data(data_base, new_data, data_key, value_flag):
-    data_base[data_key] = new_data
+def database_insert_data(database, new_data, data_key, value_flag):
+    database[data_key] = new_data
     if value_flag:
-        data_base["value_keys"].append(data_key)
-        data_base["value_keys"] = list(set(data_base["value_keys"]))
+        database["value_keys"].append(data_key)
+        database["value_keys"] = list(set(database["value_keys"]))
     else:
-        data_base["non_value_keys"].append(data_key)
-        data_base["non_value_keys"] = list(set(data_base["non_value_keys"]))
-    return data_base
+        database["non_value_keys"].append(data_key)
+        database["non_value_keys"] = list(set(database["non_value_keys"]))
+    return database
 
 
-def get_data_from_file():
-    global data_base
+def get_data_from_file(database, preset_cfg):
     product_name_found_flag = False
     non_value_keys = []
     value_keys = []
@@ -358,7 +355,7 @@ def get_data_from_file():
         fl = fr.splitlines()
 
         # For find the suitable total length
-        data_base["product_name"] = ""
+        database["product_name"] = ""
         for line_data in fl:
             line_data = remove_time_stamp_in_prefix(line_data)
 
@@ -388,70 +385,70 @@ def get_data_from_file():
                     found = find_word_before_suffix(key_val, "dBm")
                     if found != '':
                         key_val = found.strip()
-                    if key in data_base:
+                    if key in database:
                         if key in value_keys:
                             try:
                                 key_val = float(key_val)
                             except ValueError:
                                 key_val = -0.01
-                        data_base[key].append(key_val)
+                        database[key].append(key_val)
                     else:
                         if key_val.lstrip('-+').isnumeric():
                             value_keys.append(key)
                             key_val = float(key_val)
                         else:
                             non_value_keys.append(key)
-                        data_base[key] = [key_val]
+                        database[key] = [key_val]
         f.close()
-    data_base["value_keys"] = value_keys
-    data_base["non_value_keys"] = non_value_keys
+    database["value_keys"] = value_keys
+    database["non_value_keys"] = non_value_keys
 
     item_nums = []
 
-    for key in data_base.keys():
-        item_nums.append(len(data_base[key]))
+    for key in database.keys():
+        item_nums.append(len(database[key]))
 
     counts = np.bincount(item_nums)
     data_len_most = np.argmax(counts)
 
-    for key in data_base.keys():
-        if len(data_base[key]) == data_len_most:
+    for key in database.keys():
+        if len(database[key]) == data_len_most:
             data_len_most_pattern = key
             break
 
     # Real data
-    data_base = {}
+    database = {}
     cur_len = 0
     with open(file_path, "r", encoding='utf-8') as f:
         fr = f.read()
         fl = fr.splitlines()
-        data_base["product_name"] = ""
+        database["product_name"] = ""
 
         for line_data in fl:
             line_data = remove_time_stamp_in_prefix(line_data)
 
             # replace words start
-            for tmp_idx in range(len(_preset_cfg['_old_words'])):
-                _old_words = _preset_cfg['_old_words'][tmp_idx]
-                _new_words = _preset_cfg['_new_words'][tmp_idx]
+            for tmp_idx in range(len(preset_cfg.data['_old_words'])):
+                _old_words = preset_cfg.data['_old_words'][tmp_idx]
+                _new_words = preset_cfg.data['_new_words'][tmp_idx]
                 line_data = line_data.replace(_old_words, _new_words)
             # replace words start end
 
             # remove pattern start
-            for tmp_idx in range(len(_preset_cfg['_remove_words'])):
-                _remove_words = _preset_cfg['_remove_words'][tmp_idx]
+            for tmp_idx in range(len(preset_cfg.data['_remove_words'])):
+                _remove_words = preset_cfg.data['_remove_words'][tmp_idx]
                 line_data = line_data.replace(_remove_words, '')
             # remove pattern end
 
             # use one format to segment data start
-            for tmp_idx in range(len(_preset_cfg['_data_seg'])):
-                _data_seg = _preset_cfg['_data_seg'][tmp_idx]
+            for tmp_idx in range(len(preset_cfg.data['_data_seg'])):
+                _data_seg = preset_cfg.data['_data_seg'][tmp_idx]
                 line_data = line_data.replace(_data_seg, '/')
             # use one format to segment data end
 
             # update _key_value_sep start
-            if(len(_preset_cfg['_key_value_sep']) > 0):
-                _key_value_sep = _preset_cfg['_key_value_sep'][-1]
+            if(len(preset_cfg.data['_key_value_sep']) > 0):
+                _key_value_sep = preset_cfg.data['_key_value_sep'][-1]
             else:
                 _key_value_sep = '='
             # update _key_value_sep end
@@ -460,7 +457,7 @@ def get_data_from_file():
                 found = find_product_name(line_data)
                 if found != "":
                     product_name_found_flag = True
-                    data_base["product_name"] = found
+                    database["product_name"] = found
 
             if(check_data_line(line_data)):
                 debug_print(line_data)
@@ -492,28 +489,28 @@ def get_data_from_file():
 
                     if found != '':
                         key_val = found.strip()
-                    if key in data_base:
-                        loss_data_len = cur_len - 1 - len(data_base[key])
+                    if key in database:
+                        loss_data_len = cur_len - 1 - len(database[key])
                         if loss_data_len > 0:
                             for tmp_idx in range(loss_data_len):
                                 if key in value_keys:
                                     key_val_redundancy = -0.01
                                 else:
                                     key_val_redundancy = "unknown"
-                                data_base[key].append(key_val_redundancy)
+                                database[key].append(key_val_redundancy)
                         if key in value_keys:
                             try:
                                 key_val = float(key_val)
                             except ValueError:
                                 key_val = -0.01
-                        data_base[key].append(key_val)
+                        database[key].append(key_val)
                     else:
                         if key_val.lstrip('-+').isnumeric():
                             value_keys.append(key)
                             key_val = float(key_val)
                         else:
                             non_value_keys.append(key)
-                        data_base[key] = [key_val]
+                        database[key] = [key_val]
 
                         loss_data_len = cur_len - 1
                         if loss_data_len > 0:
@@ -522,61 +519,61 @@ def get_data_from_file():
                                     key_val_redundancy = -0.01
                                 else:
                                     key_val_redundancy = "unknown"
-                                data_base[key].insert(0, key_val_redundancy)
+                                database[key].insert(0, key_val_redundancy)
 
-    data_base["value_keys"] = value_keys
-    data_base["non_value_keys"] = non_value_keys
+    database["value_keys"] = value_keys
+    database["non_value_keys"] = non_value_keys
 
     # start post precess
     # format
-    for tmp_idx in range(len(_preset_cfg['_format_new_item'])):
-        _format_new_item = _preset_cfg['_format_new_item'][tmp_idx]
-        _format_format = _preset_cfg['_format_format'][tmp_idx]
-        _format_item_01 = _preset_cfg['_format_item_01'][tmp_idx]
-        _format_item_02 = _preset_cfg['_format_item_02'][tmp_idx]
-        if _format_item_01 in data_base.keys() and \
-                _format_item_02 in data_base.keys() and _format_new_item not in data_base.keys():
+    for tmp_idx in range(len(preset_cfg.data['_format_new_item'])):
+        _format_new_item = preset_cfg.data['_format_new_item'][tmp_idx]
+        _format_format = preset_cfg.data['_format_format'][tmp_idx]
+        _format_item_01 = preset_cfg.data['_format_item_01'][tmp_idx]
+        _format_item_02 = preset_cfg.data['_format_item_02'][tmp_idx]
+        if _format_item_01 in database.keys() and \
+                _format_item_02 in database.keys() and _format_new_item not in database.keys():
             is_value = True
             tmp_data_array = []
-            for data_index in range(min(len(data_base[_format_item_01]),
-                                        len(data_base[_format_item_02]))):
-                data_01 = data_base[_format_item_01][data_index]
-                data_02 = data_base[_format_item_02][data_index]
+            for data_index in range(min(len(database[_format_item_01]),
+                                        len(database[_format_item_02]))):
+                data_01 = database[_format_item_01][data_index]
+                data_02 = database[_format_item_02][data_index]
 
                 tmp_data = _format_format % (data_01, data_02)
                 tmp_data_array.append(tmp_data)
 
-            data_base = data_base_insert_data(data_base, tmp_data_array,
-                                              _format_new_item, False)
+            database = database_insert_data(database, tmp_data_array,
+                                            _format_new_item, False)
 
     # alias start
-    for tmp_idx in range(len(_preset_cfg['_alias_ori_item'])):
-        _alias_ori_item = _preset_cfg['_alias_ori_item'][tmp_idx]
-        _alias_new_item = _preset_cfg['_alias_new_item'][tmp_idx]
+    for tmp_idx in range(len(preset_cfg.data['_alias_ori_item'])):
+        _alias_ori_item = preset_cfg.data['_alias_ori_item'][tmp_idx]
+        _alias_new_item = preset_cfg.data['_alias_new_item'][tmp_idx]
 
-        if _alias_ori_item in data_base.keys() and _alias_new_item not in data_base.keys():
-            is_value = check_data_is_all_value(data_base[_alias_ori_item])
+        if _alias_ori_item in database.keys() and _alias_new_item not in database.keys():
+            is_value = check_data_is_all_value(database[_alias_ori_item])
 
-            data_base = data_base_insert_data(
-                data_base, data_base[_alias_ori_item],
+            database = database_insert_data(
+                database, database[_alias_ori_item],
                 _alias_new_item, is_value)
     # alias stop
 
     # calculation start
-    for tmp_idx in range(len(_preset_cfg['_post_new_item'])):
-        _post_new_item = _preset_cfg['_post_new_item'][tmp_idx]
-        _post_item_01 = _preset_cfg['_post_item_01'][tmp_idx]
-        _post_op_code = _preset_cfg['_post_op_code'][tmp_idx]
-        _post_item_02 = _preset_cfg['_post_item_02'][tmp_idx]
+    for tmp_idx in range(len(preset_cfg.data['_post_new_item'])):
+        _post_new_item = preset_cfg.data['_post_new_item'][tmp_idx]
+        _post_item_01 = preset_cfg.data['_post_item_01'][tmp_idx]
+        _post_op_code = preset_cfg.data['_post_op_code'][tmp_idx]
+        _post_item_02 = preset_cfg.data['_post_item_02'][tmp_idx]
         data_002_is_const = False
-        if (_post_item_01 in data_base.keys() and _post_item_02 in
-                data_base.keys()) or _post_item_01 in data_base.keys():
+        if (_post_item_01 in database.keys() and _post_item_02 in
+                database.keys()) or _post_item_01 in database.keys():
             post_operation_valid = True
-            if _post_item_02 in data_base.keys():
-                post_operation_valid = bool(check_data_is_all_value(data_base[_post_item_01]) and
-                                            check_data_is_all_value(data_base[_post_item_02]))
+            if _post_item_02 in database.keys():
+                post_operation_valid = bool(check_data_is_all_value(database[_post_item_01]) and
+                                            check_data_is_all_value(database[_post_item_02]))
             else:
-                if check_data_is_all_value(data_base[_post_item_01]) and \
+                if check_data_is_all_value(database[_post_item_01]) and \
                         check_data_is_all_value(_post_item_02):
                     post_operation_valid = True
                     data_002_is_const = True
@@ -585,15 +582,15 @@ def get_data_from_file():
             if post_operation_valid:
                 tmp_data_array = []
                 if not data_002_is_const:
-                    data_len_tmp = min(len(data_base[_post_item_01]),
-                                       len(data_base[_post_item_02]))
+                    data_len_tmp = min(len(database[_post_item_01]),
+                                       len(database[_post_item_02]))
                 else:
-                    data_len_tmp = len(data_base[_post_item_01])
+                    data_len_tmp = len(database[_post_item_01])
 
                 for data_index in range(data_len_tmp):
-                    data_01 = data_base[_post_item_01][data_index]
+                    data_01 = database[_post_item_01][data_index]
                     if not data_002_is_const:
-                        data_02 = data_base[_post_item_02][data_index]
+                        data_02 = database[_post_item_02][data_index]
                     else:
                         data_02 = float(_post_item_02)
                     if _post_op_code == '+':
@@ -615,49 +612,49 @@ def get_data_from_file():
                     else:
                         tmp_data = -0.01
                     tmp_data_array.append(tmp_data)
-                data_base = data_base_insert_data(data_base, tmp_data_array,
-                                                  _post_new_item, True)
+                database = database_insert_data(database, tmp_data_array,
+                                                _post_new_item, True)
 
     # calculation end
 
-    data_base["value_keys"] = list(set(data_base["value_keys"]))
-    data_base["non_value_keys"] = list(set(data_base["non_value_keys"]))
+    database["value_keys"] = list(set(database["value_keys"]))
+    database["non_value_keys"] = list(set(database["non_value_keys"]))
 
     # trans_data start
-    for tmp_idx in range(len(_preset_cfg['_trans_item'])):
-        _trans_item = _preset_cfg['_trans_item'][tmp_idx]
-        _trans_op_code = _preset_cfg['_trans_op_code'][tmp_idx]
-        if _trans_item in data_base.keys():
+    for tmp_idx in range(len(preset_cfg.data['_trans_item'])):
+        _trans_item = preset_cfg.data['_trans_item'][tmp_idx]
+        _trans_op_code = preset_cfg.data['_trans_op_code'][tmp_idx]
+        if _trans_item in database.keys():
             if _trans_op_code == 'hex2dec':
                 data_tmp_array = []
-                for data_index in range(len(data_base[_trans_item])):
+                for data_index in range(len(database[_trans_item])):
                     try:
-                        data_tmp = int(data_base[_trans_item][data_index], 16)
+                        data_tmp = int(database[_trans_item][data_index], 16)
                     except ValueError:
                         data_tmp = -0.01
                     data_tmp_array.append(data_tmp)
-                data_base["non_value_keys"].remove(_trans_item)
-                data_base = data_base_insert_data(
-                    data_base, data_tmp_array, _trans_item, True)
-                # data_base["value_keys"].append(_trans_item)
+                database["non_value_keys"].remove(_trans_item)
+                database = database_insert_data(
+                    database, data_tmp_array, _trans_item, True)
+                # database["value_keys"].append(_trans_item)
             elif _trans_op_code == 'char2int':
                 data_tmp_array = []
-                for data_index in range(len(data_base[_trans_item])):
+                for data_index in range(len(database[_trans_item])):
                     try:
                         data_tmp = 0
-                        len_tmp = len(data_base[_trans_item][data_index])
+                        len_tmp = len(database[_trans_item][data_index])
                         for tmp_idx in range(len_tmp):
-                            data_tmp += ord(data_base[_trans_item]
+                            data_tmp += ord(database[_trans_item]
                                             [data_index][tmp_idx])
                     except ValueError:
                         data_tmp = -0.01
                     data_tmp_array.append(data_tmp)
-                data_base["non_value_keys"].remove(_trans_item)
-                data_base = data_base_insert_data(
-                    data_base, data_tmp_array, _trans_item, True)
+                database["non_value_keys"].remove(_trans_item)
+                database = database_insert_data(
+                    database, data_tmp_array, _trans_item, True)
     # trans_data end
 
-    return data_base, screen_dpi
+    return database, screen_dpi
 
 
 def get_plot_data_with_le(data):
@@ -735,6 +732,8 @@ class LogFigure:
         self.screen_ratio_check = False
         self.screen_dpi = 96
         self.total_fig_num = 0
+        self.code_version = '0.0.0'
+        self.version_date = '20999999'
 
     def set_show_max(self, flag):
         self.show_max = flag
@@ -759,6 +758,10 @@ class LogFigure:
 
     def set_total_fig_num(self, total_fig_num):
         self.total_fig_num = total_fig_num
+
+    def set_version_info(self, codeversioninfo):
+        self.code_version = codeversioninfo.code_version
+        self.version_date = codeversioninfo.version_date
 
     def gen_new_figure(self):
         self.cur_data_count = 0
@@ -849,9 +852,9 @@ class LogFigure:
         if database["product_name"] != "":
             self.product_name = database["product_name"]
 
-        data = data_base[new_data_key]
+        data = database[new_data_key]
 
-        text_flag = new_data_key in data_base["non_value_keys"]
+        text_flag = new_data_key in database["non_value_keys"]
         if not text_flag:
             data = list(map(float, data))
 
@@ -1023,7 +1026,7 @@ class LogFigure:
 
         x_tmp = right - x_dym*0.1
         y_tmp = bottom - y_dym*0.1
-        text_tmp = "Version %s/%s" % (VERSION_CODE, VERSION_DATE)
+        text_tmp = "Version %s/%s" % (self.code_version, self.version_date)
         plt.text(x_tmp, y_tmp, text_tmp, color='orange')
         x_tmp = right - x_dym*0.15
         y_tmp = bottom - y_dym*0.13
@@ -1042,26 +1045,39 @@ class LogFigure:
         return self.total_fig_num
 
 
+def init_cur_fig(cur_fig, version_info, screen_dpi):
+    cur_fig.set_version_info(version_info)
+    cur_fig.set_screen_dpi(screen_dpi)
+    cur_fig.gen_new_figure()
+
+
 def main():
-    update_cfg_files()
-    get_preset_cfg_from_file()
-    data_base, screen_dpi = get_data_from_file()
+    _cfg_files = CfgFiles()
+    update_cfg_files(_cfg_files)
+    preset_cfg = PresetCfg()
+
+    preset_file = _cfg_files.preset_file
+    get_preset_cfg_from_file(preset_file, preset_cfg)
+    log_data = LogDatabase()
+    log_data.database, screen_dpi = get_data_from_file(
+        log_data.database, preset_cfg)
+    database = log_data.database
     fig = []
     # cur_path = getcwd()
     cur_path = dirname(__file__)
-    cfg_file_with_path = join(CFG_FILE_PATH, CFG_FILE)
-    cfg_ref_file_with_path = join(cur_path, CFG_REF_FILE)
+    cfg_file_with_path = join(_cfg_files.cfg_file_path, _cfg_files.plot_file)
+    cfg_ref_file_with_path = join(cur_path, _cfg_files.ref_file)
+    version_info = CodeVersionInfo()
 
     with open(cfg_ref_file_with_path, 'w') as fw:
-        for key in data_base.keys():
+        for key in database.keys():
             if key not in RESERVED_WORDS:
                 f_data = "%s\n" % (key)
                 fw.write(f_data)
         fw.close()
 
     fig.append(LogFigure())  # first figure
-    fig[-1].set_screen_dpi(screen_dpi)
-    fig[-1].gen_new_figure()
+    init_cur_fig(fig[-1], version_info, screen_dpi)
     first_fig_flag = True
     avg_flag = False
     cur_fig_num = 0
@@ -1084,12 +1100,11 @@ def main():
                     fig[-1].set_total_fig_num(cur_fig_num)
                     cur_fig_num = fig[-1].plot_figure()
                     fig.append(LogFigure())  # first figure
-                    fig[-1].set_screen_dpi(screen_dpi)
-                    fig[-1].gen_new_figure()
+                    init_cur_fig(fig[-1], version_info, screen_dpi)
                     fig[-1].set_title(new_fig_title)
 
-                if(len(_preset_cfg['_time_step_sec']) > 0):
-                    step_sec = _preset_cfg['_time_step_sec'][-1]
+                if(len(preset_cfg.data['_time_step_sec']) > 0):
+                    step_sec = preset_cfg.data['_time_step_sec'][-1]
                     if(check_data_is_all_value(step_sec)):
                         fig[-1].set_time_step_sec(float(step_sec))
             elif operation_item != "":  # share y axis
@@ -1108,19 +1123,19 @@ def main():
 
             else:  # data only
                 if not avg_flag:
-                    fig[-1].gen_figure(data_base, line_data)
+                    fig[-1].gen_figure(log_data.database, line_data)
                     if first_fig_flag:
                         first_fig_flag = False
                 else:  # average the data and name original_name_avg
-                    if line_data in data_base:
-                        tmp_data_len = len(data_base[line_data])
+                    if line_data in database:
+                        tmp_data_len = len(log_data.database[line_data])
                         try:
-                            tmp_avg = sum(data_base[line_data]) / tmp_data_len
+                            tmp_avg = sum(database[line_data]) / tmp_data_len
                         except TypeError:
                             tmp_avg = -0.01
 
                         new_name = line_data + "_avg"
-                        data_base[new_name] = [tmp_avg] * tmp_data_len
+                        database[new_name] = [tmp_avg] * tmp_data_len
                     avg_flag = False
 
     fig[-1].set_total_fig_num(cur_fig_num)

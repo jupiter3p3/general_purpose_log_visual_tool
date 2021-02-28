@@ -1,33 +1,34 @@
 [fig_01 title]
-<2>
-# share y axis for key_001/key_002
-key_001
-key_002
-# generate avg of key_001/key_002/key_003/key_004
-# avg data are key_001_avg/key_002_avg/key_003_avg/key_004_avg
+# generate avg of key_000/key_001
+# avg data are key_000_avg/key_001_avg
+<avg>
+key_000
 <avg>
 key_001
+<4>
+# share y axis for key_000/key_001/key_000_avg/key_001_avg
+key_000
+key_001
+key_000_avg
+key_001_avg
+# generate avg of key_002/key_003
+# avg data are key_002_avg/key_003_avg
 <avg>
 key_002
 <avg>
 key_003
-<avg>
-key_004
-# share y axis for key_001/key_002/key_003/key_004 and each average of the 4 data
-# show max/min value of key_001/key_002/key_003/key_004
-<8>
+# share y axis for key_002/key_003/key_002_avg/key_003_avg
+<4>
+# show max/min value of key_002/key_003
 <show max>
 <show min>
-key_001
 key_002
 key_003
-key_004
 <hide max>
 <hide min>
-key_001_avg
 key_002_avg
 key_003_avg
-key_004_avg
+
 
 [fig_02 title]
 # share y axis for key_001/key_002/key_003/key_004
