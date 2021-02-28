@@ -64,7 +64,7 @@ for tmp_color in ["slateblue", "orchid", "violet", "magenta"]:
 data_base = {}
 _preset_cfg = {}
 
-RESERVED_WORDS = ["chip_name", "value_keys", "non_value_keys"]
+RESERVED_WORDS = ["product_name", "value_keys", "non_value_keys"]
 
 g_total_fig_num = 0
 
@@ -108,129 +108,131 @@ def update_cfg_files():
     possible_key_words = ["preset_file", "plot_items_file",
                           "dump_possible_items_file"]
 
-    fr = open(cfg_file_with_path, "r", encoding='utf-8')
-    fl = fr.readlines()
+    with open(cfg_file_with_path, "r", encoding='utf-8') as f:
+        fr = f.read()
+        fl = fr.splitlines()
 
-    cur_file_type = None
-    for line_data in fl:
-        file_name_type = find_word_between_two_words(line_data, '\\<', "\\>")
+        cur_file_type = None
+        for line_data in fl:
+            file_name_type = find_word_between_two_words(line_data, '\\<', "\\>")
 
-        if file_name_type != "":  # change mode
-            if file_name_type in possible_key_words:
-                cur_file_type = file_name_type
-            else:  # unknown mode
-                cur_file_type = None
-            continue
+            if file_name_type != "":  # change mode
+                if file_name_type in possible_key_words:
+                    cur_file_type = file_name_type
+                else:  # unknown mode
+                    cur_file_type = None
+                continue
 
-        tmp_line = line_data.strip()
-        tmp_line = join(CFG_FILE_PATH, tmp_line)
+            tmp_line = line_data.strip()
+            tmp_line = join(CFG_FILE_PATH, tmp_line)
 
-        if isfile(tmp_line):
-            if cur_file_type == "preset_file":
-                PRESET_FILE = tmp_line
-            elif cur_file_type == "plot_items_file":
-                CFG_FILE = tmp_line
-        elif cur_file_type == "dump_possible_items_file" and tmp_line[0] != '#':
-            CFG_REF_FILE = tmp_line
-    if CFG_REF_FILE is None:
-        #  filename_with_path, ext_name = splitext(CFG_FILE)
-        filename_with_path = splitext(CFG_FILE)[0]
-        CFG_REF_FILE = join(CFG_FILE_PATH, basename(filename_with_path) +
-                            "_possible_items.glgp_plot")
+            if isfile(tmp_line):
+                if cur_file_type == "preset_file":
+                    PRESET_FILE = tmp_line
+                elif cur_file_type == "plot_items_file":
+                    CFG_FILE = tmp_line
+            elif cur_file_type == "dump_possible_items_file" and tmp_line[0] != '#':
+                CFG_REF_FILE = tmp_line
+        if CFG_REF_FILE is None:
+            #  filename_with_path, ext_name = splitext(CFG_FILE)
+            filename_with_path = splitext(CFG_FILE)[0]
+            CFG_REF_FILE = join(CFG_FILE_PATH, basename(filename_with_path) +
+                                "_possible_items.glgp_plot")
 
 
 def get_preset_cfg_from_file():
     global _preset_cfg
     global PRESET_FILE
 
-    fr = open(PRESET_FILE, "r", encoding='utf-8')
-    fl = fr.readlines()
-    possible_preset_modes = ["replace_words", "remove_words",
-                             "data_segment", "key_value_separate",
-                             "post_process", "alias", "time_step_sec"]
+    with open(PRESET_FILE, "r", encoding='utf-8') as f:
+        fr = f.read()
+        fl = fr.splitlines()
+        possible_preset_modes = ["replace_words", "remove_words",
+                                 "data_segment", "key_value_separate",
+                                 "post_process", "alias", "time_step_sec"]
 
-    _preset_cfg['_old_words'] = []
-    _preset_cfg['_new_words'] = []
-    _preset_cfg['_remove_words'] = []
-    _preset_cfg['_data_seg'] = []
-    _preset_cfg['_key_value_sep'] = []
+        _preset_cfg['_old_words'] = []
+        _preset_cfg['_new_words'] = []
+        _preset_cfg['_remove_words'] = []
+        _preset_cfg['_data_seg'] = []
+        _preset_cfg['_key_value_sep'] = []
 
-    _preset_cfg['_post_new_item'] = []
-    _preset_cfg['_post_item_01'] = []
-    _preset_cfg['_post_op_code'] = []
-    _preset_cfg['_post_item_02'] = []
+        _preset_cfg['_post_new_item'] = []
+        _preset_cfg['_post_item_01'] = []
+        _preset_cfg['_post_op_code'] = []
+        _preset_cfg['_post_item_02'] = []
 
-    _preset_cfg['_trans_item'] = []
-    _preset_cfg['_trans_op_code'] = []
+        _preset_cfg['_trans_item'] = []
+        _preset_cfg['_trans_op_code'] = []
 
-    _preset_cfg['_format_new_item'] = []
-    _preset_cfg['_format_format'] = []
-    _preset_cfg['_format_item_01'] = []
-    _preset_cfg['_format_item_02'] = []
+        _preset_cfg['_format_new_item'] = []
+        _preset_cfg['_format_format'] = []
+        _preset_cfg['_format_item_01'] = []
+        _preset_cfg['_format_item_02'] = []
 
-    _preset_cfg['_alias_new_item'] = []
-    _preset_cfg['_alias_ori_item'] = []
+        _preset_cfg['_alias_new_item'] = []
+        _preset_cfg['_alias_ori_item'] = []
 
-    _preset_cfg['_time_step_sec'] = []
+        _preset_cfg['_time_step_sec'] = []
 
-    preset_mode = None
-    for line_data in fl:
-        mode = find_word_between_two_words(line_data, '\\<', "\\>")
-        if mode != "":  # change mode
-            if mode in possible_preset_modes:
-                preset_mode = mode
-            else:  # unknown mode
-                preset_mode = None
-            continue
+        preset_mode = None
+        for line_data in fl:
+            mode = find_word_between_two_words(line_data, '\\<', "\\>")
+            if mode != "":  # change mode
+                if mode in possible_preset_modes:
+                    preset_mode = mode
+                else:  # unknown mode
+                    preset_mode = None
+                continue
 
-        if preset_mode is not None:
-            tmp_line = line_data.strip()
-        if(len(tmp_line) == 0):
-            continue
-        if(tmp_line[0] == '#'):
-            continue
+            if preset_mode is not None:
+                tmp_line = line_data.strip()
+            if(len(tmp_line) == 0):
+                continue
+            if(tmp_line[0] == '#'):
+                continue
 
-        if preset_mode == "replace_words":
-            tmp_line = line_data.split("=")
-            if(len(tmp_line) == 2):
+            if preset_mode == "replace_words":
+                tmp_line = line_data.split("=")
+                if(len(tmp_line) == 2):
+                    for tmp_idx in range(len(tmp_line)):
+                        tmp_line[tmp_idx] = tmp_line[tmp_idx].strip()
+                    _preset_cfg['_old_words'].append(tmp_line[0])
+                    _preset_cfg['_new_words'].append(tmp_line[1])
+            elif preset_mode == "remove_words":
+                _preset_cfg['_remove_words'].append(tmp_line)
+            elif preset_mode == "data_segment":
+                _preset_cfg['_data_seg'].append(tmp_line)
+            elif preset_mode == "key_value_separate":
+                _preset_cfg['_key_value_sep'].append(tmp_line)
+            elif preset_mode == "post_process":
+                tmp_line = line_data.split(";")
                 for tmp_idx in range(len(tmp_line)):
                     tmp_line[tmp_idx] = tmp_line[tmp_idx].strip()
-                _preset_cfg['_old_words'].append(tmp_line[0])
-                _preset_cfg['_new_words'].append(tmp_line[1])
-        elif preset_mode == "remove_words":
-            _preset_cfg['_remove_words'].append(tmp_line)
-        elif preset_mode == "data_segment":
-            _preset_cfg['_data_seg'].append(tmp_line)
-        elif preset_mode == "key_value_separate":
-            _preset_cfg['_key_value_sep'].append(tmp_line)
-        elif preset_mode == "post_process":
-            tmp_line = line_data.split(";")
-            for tmp_idx in range(len(tmp_line)):
-                tmp_line[tmp_idx] = tmp_line[tmp_idx].strip()
-            if(len(tmp_line) == 4):
-                _preset_cfg['_post_new_item'].append(tmp_line[0])
-                _preset_cfg['_post_item_01'].append(tmp_line[1])
-                _preset_cfg['_post_op_code'].append(tmp_line[2])
-                _preset_cfg['_post_item_02'].append(tmp_line[3])
+                if(len(tmp_line) == 4):
+                    _preset_cfg['_post_new_item'].append(tmp_line[0])
+                    _preset_cfg['_post_item_01'].append(tmp_line[1])
+                    _preset_cfg['_post_op_code'].append(tmp_line[2])
+                    _preset_cfg['_post_item_02'].append(tmp_line[3])
 
-            elif(len(tmp_line) == 2):
-                _preset_cfg['_trans_item'].append(tmp_line[0])
-                _preset_cfg['_trans_op_code'].append(tmp_line[1])
-            elif(len(tmp_line) == 5 and tmp_line[1] == 'fmt'):
-                _preset_cfg['_format_new_item'].append(tmp_line[0])
-                _preset_cfg['_format_item_01'].append(tmp_line[2])
-                _preset_cfg['_format_item_02'].append(tmp_line[3])
-                _preset_cfg['_format_format'].append(tmp_line[4])
-        elif preset_mode == "alias":
-            tmp_line = line_data.split(";")
-            for tmp_idx in range(len(tmp_line)):
-                tmp_line[tmp_idx] = tmp_line[tmp_idx].strip()
-            if(len(tmp_line) == 2):
-                _preset_cfg['_alias_new_item'].append(tmp_line[0])
-                _preset_cfg['_alias_ori_item'].append(tmp_line[1])
-        elif preset_mode == 'time_step_sec':
-            tmp_line = line_data.strip()
-            _preset_cfg['_time_step_sec'].append(tmp_line)
+                elif(len(tmp_line) == 2):
+                    _preset_cfg['_trans_item'].append(tmp_line[0])
+                    _preset_cfg['_trans_op_code'].append(tmp_line[1])
+                elif(len(tmp_line) == 5 and tmp_line[1] == 'fmt'):
+                    _preset_cfg['_format_new_item'].append(tmp_line[0])
+                    _preset_cfg['_format_item_01'].append(tmp_line[2])
+                    _preset_cfg['_format_item_02'].append(tmp_line[3])
+                    _preset_cfg['_format_format'].append(tmp_line[4])
+            elif preset_mode == "alias":
+                tmp_line = line_data.split(";")
+                for tmp_idx in range(len(tmp_line)):
+                    tmp_line[tmp_idx] = tmp_line[tmp_idx].strip()
+                if(len(tmp_line) == 2):
+                    _preset_cfg['_alias_new_item'].append(tmp_line[0])
+                    _preset_cfg['_alias_ori_item'].append(tmp_line[1])
+            elif preset_mode == 'time_step_sec':
+                tmp_line = line_data.strip()
+                _preset_cfg['_time_step_sec'].append(tmp_line)
 
 
 def get_win_pos_cfg(index):
@@ -308,13 +310,13 @@ def find_word_after_prefix(text, pre_word):
     return found
 
 
-def find_chip_name(line_data):
-    chip_name = ''
+def find_product_name(line_data):
+    product_name = ''
     found = find_word_between_two_words(line_data, 'info ', ']')
     if found != '':
-        chip_name = found
-        debug_print("chip_name = %s" % (chip_name))
-    return chip_name
+        product_name = found
+        debug_print("product_name = %s" % (product_name))
+    return product_name
 
 
 def check_data_line(line_data):
@@ -345,7 +347,7 @@ def data_base_insert_data(data_base, new_data, data_key, value_flag):
 def get_data_from_file():
     global g_screen_dpi
     global data_base
-    chip_name_found_flag = False
+    product_name_found_flag = False
     non_value_keys = []
     value_keys = []
     if not PSEUDO_DATA:
@@ -362,7 +364,7 @@ def get_data_from_file():
         fl = "key_001/ key_002/ key_003  = data_001/ data_002/ data_003"
 
     # For find the suitable total length
-    data_base["chip_name"] = ""
+    data_base["product_name"] = ""
     for line_data in fl:
         line_data = remove_time_stamp_in_prefix(line_data)
 
@@ -426,105 +428,107 @@ def get_data_from_file():
     # Real data
     data_base = {}
     cur_len = 0
-    fr = open(file_path, "r", encoding='utf-8')
-    fl = fr.readlines()
-    data_base["chip_name"] = ""
-    for line_data in fl:
-        line_data = remove_time_stamp_in_prefix(line_data)
+    with open(file_path, "r", encoding='utf-8') as f:
+        fr = f.read()
+        fl = fr.splitlines()
+        data_base["product_name"] = ""
 
-        # replace words start
-        for tmp_idx in range(len(_preset_cfg['_old_words'])):
-            _old_words = _preset_cfg['_old_words'][tmp_idx]
-            _new_words = _preset_cfg['_new_words'][tmp_idx]
-            line_data = line_data.replace(_old_words, _new_words)
-        # replace words start end
+        for line_data in fl:
+            line_data = remove_time_stamp_in_prefix(line_data)
 
-        # remove pattern start
-        for tmp_idx in range(len(_preset_cfg['_remove_words'])):
-            _remove_words = _preset_cfg['_remove_words'][tmp_idx]
-            line_data = line_data.replace(_remove_words, '')
-        # remove pattern end
+            # replace words start
+            for tmp_idx in range(len(_preset_cfg['_old_words'])):
+                _old_words = _preset_cfg['_old_words'][tmp_idx]
+                _new_words = _preset_cfg['_new_words'][tmp_idx]
+                line_data = line_data.replace(_old_words, _new_words)
+            # replace words start end
 
-        # use one format to segment data start
-        for tmp_idx in range(len(_preset_cfg['_data_seg'])):
-            _data_seg = _preset_cfg['_data_seg'][tmp_idx]
-            line_data = line_data.replace(_data_seg, '/')
-        # use one format to segment data end
+            # remove pattern start
+            for tmp_idx in range(len(_preset_cfg['_remove_words'])):
+                _remove_words = _preset_cfg['_remove_words'][tmp_idx]
+                line_data = line_data.replace(_remove_words, '')
+            # remove pattern end
 
-        # update _key_value_sep start
-        if(len(_preset_cfg['_key_value_sep']) > 0):
-            _key_value_sep = _preset_cfg['_key_value_sep'][-1]
-        else:
-            _key_value_sep = '='
-        # update _key_value_sep end
+            # use one format to segment data start
+            for tmp_idx in range(len(_preset_cfg['_data_seg'])):
+                _data_seg = _preset_cfg['_data_seg'][tmp_idx]
+                line_data = line_data.replace(_data_seg, '/')
+            # use one format to segment data end
 
-        if not chip_name_found_flag:
-            found = find_chip_name(line_data)
-            if found != "":
-                chip_name_found_flag = True
-                data_base["chip_name"] = found
-
-        if(check_data_line(line_data)):
-            debug_print(line_data)
-
-            tmp_len = len(line_data.split(_key_value_sep))
-            field = line_data.split(_key_value_sep)[0]
-            value = line_data.split(_key_value_sep)[1]
-
-            if tmp_len > 2:
-                for tmp_idx in range(2, tmp_len):
-                    value += line_data.split(_key_value_sep)[tmp_idx]
-
-            field = field.split('/')
-            if len(field) > 1:
-                value = value.split('/')
+            # update _key_value_sep start
+            if(len(_preset_cfg['_key_value_sep']) > 0):
+                _key_value_sep = _preset_cfg['_key_value_sep'][-1]
             else:
-                value = [str(value)]
+                _key_value_sep = '='
+            # update _key_value_sep end
 
-            for tmp_idx in range(min(len(field), len(value))):
-                field[tmp_idx] = field[tmp_idx].strip()
-                value[tmp_idx] = value[tmp_idx].strip()
+            if not product_name_found_flag:
+                found = find_product_name(line_data)
+                if found != "":
+                    product_name_found_flag = True
+                    data_base["product_name"] = found
 
-            for tmp_idx in range(min(len(field), len(value))):
-                key = field[tmp_idx].strip()
-                if key == data_len_most_pattern:
-                    cur_len += 1
-                key_val = value[tmp_idx].strip()
-                found = find_word_before_suffix(key_val, "dBm")
+            if(check_data_line(line_data)):
+                debug_print(line_data)
 
-                if found != '':
-                    key_val = found.strip()
-                if key in data_base:
-                    loss_data_len = cur_len - 1 - len(data_base[key])
-                    if loss_data_len > 0:
-                        for tmp_idx in range(loss_data_len):
-                            if key in value_keys:
-                                key_val_redundancy = -0.01
-                            else:
-                                key_val_redundancy = "unknown"
-                            data_base[key].append(key_val_redundancy)
-                    if key in value_keys:
-                        try:
-                            key_val = float(key_val)
-                        except ValueError:
-                            key_val = -0.01
-                    data_base[key].append(key_val)
+                tmp_len = len(line_data.split(_key_value_sep))
+                field = line_data.split(_key_value_sep)[0]
+                value = line_data.split(_key_value_sep)[1]
+
+                if tmp_len > 2:
+                    for tmp_idx in range(2, tmp_len):
+                        value += line_data.split(_key_value_sep)[tmp_idx]
+
+                field = field.split('/')
+                if len(field) > 1:
+                    value = value.split('/')
                 else:
-                    if key_val.lstrip('-+').isnumeric():
-                        value_keys.append(key)
-                        key_val = float(key_val)
-                    else:
-                        non_value_keys.append(key)
-                    data_base[key] = [key_val]
+                    value = [str(value)]
 
-                    loss_data_len = cur_len - 1
-                    if loss_data_len > 0:
-                        for tmp_idx in range(loss_data_len):
-                            if key in value_keys:
-                                key_val_redundancy = -0.01
-                            else:
-                                key_val_redundancy = "unknown"
-                            data_base[key].insert(0, key_val_redundancy)
+                for tmp_idx in range(min(len(field), len(value))):
+                    field[tmp_idx] = field[tmp_idx].strip()
+                    value[tmp_idx] = value[tmp_idx].strip()
+
+                for tmp_idx in range(min(len(field), len(value))):
+                    key = field[tmp_idx].strip()
+                    if key == data_len_most_pattern:
+                        cur_len += 1
+                    key_val = value[tmp_idx].strip()
+                    found = find_word_before_suffix(key_val, "dBm")
+
+                    if found != '':
+                        key_val = found.strip()
+                    if key in data_base:
+                        loss_data_len = cur_len - 1 - len(data_base[key])
+                        if loss_data_len > 0:
+                            for tmp_idx in range(loss_data_len):
+                                if key in value_keys:
+                                    key_val_redundancy = -0.01
+                                else:
+                                    key_val_redundancy = "unknown"
+                                data_base[key].append(key_val_redundancy)
+                        if key in value_keys:
+                            try:
+                                key_val = float(key_val)
+                            except ValueError:
+                                key_val = -0.01
+                        data_base[key].append(key_val)
+                    else:
+                        if key_val.lstrip('-+').isnumeric():
+                            value_keys.append(key)
+                            key_val = float(key_val)
+                        else:
+                            non_value_keys.append(key)
+                        data_base[key] = [key_val]
+
+                        loss_data_len = cur_len - 1
+                        if loss_data_len > 0:
+                            for tmp_idx in range(loss_data_len):
+                                if key in value_keys:
+                                    key_val_redundancy = -0.01
+                                else:
+                                    key_val_redundancy = "unknown"
+                                data_base[key].insert(0, key_val_redundancy)
 
     data_base["value_keys"] = value_keys
     data_base["non_value_keys"] = non_value_keys
@@ -719,7 +723,7 @@ class LogFigure:
         self.cur_annotate_count = 0  # for text only
         self.cur_numeric_count = 0  # for value only
         self.numeric_idx_fig_num_array = []
-        self.chip_name = []
+        self.product_name = []
         self.title = "unknown"
         self.share_y_axis_times = 0
         self.indepent_y_axis_num = 0  # all data
@@ -839,8 +843,8 @@ class LogFigure:
         if new_data_key not in database:
             return
 
-        if database["chip_name"] != "":
-            self.chip_name = database["chip_name"]
+        if database["product_name"] != "":
+            self.product_name = database["product_name"]
 
         data = data_base[new_data_key]
 
