@@ -41,16 +41,16 @@ class CodeVersionInfo:
 le = LabelEncoder()
 
 COLOR_SEQ = ["black", "blue", "red", "green", "orange", "seagreen"]
-for tmp_color in ["goldenrod", "slateblue", "magenta", "cyan", "orchid"]:
-    COLOR_SEQ.append(tmp_color)
-for tmp_color in ["turquoise", "khaki", "grey", "violet", "slategray"]:
-    COLOR_SEQ.append(tmp_color)
+for tmp_color_seq in ["goldenrod", "slateblue", "magenta", "cyan", "orchid"]:
+    COLOR_SEQ.append(tmp_color_seq)
+for tmp_color_seq in ["turquoise", "khaki", "grey", "violet", "slategray"]:
+    COLOR_SEQ.append(tmp_color_seq)
 
 WITH_DARK_COLOR = ["grey", "green", "red", "orange", "goldenrod", "khaki"]
-for tmp_color in ["seagreen", "slategray", "cyan", "turquoise", "blue"]:
-    WITH_DARK_COLOR.append(tmp_color)
-for tmp_color in ["slateblue", "orchid", "violet", "magenta"]:
-    WITH_DARK_COLOR.append(tmp_color)
+for tmp_color_dark in ["seagreen", "slategray", "cyan", "turquoise", "blue"]:
+    WITH_DARK_COLOR.append(tmp_color_dark)
+for tmp_color_dark in ["slateblue", "orchid", "violet", "magenta"]:
+    WITH_DARK_COLOR.append(tmp_color_dark)
 
 # database = {}
 
@@ -492,7 +492,7 @@ def get_data_from_file(database, preset_cfg):
                     if key in database:
                         loss_data_len = cur_len - 1 - len(database[key])
                         if loss_data_len > 0:
-                            for tmp_idx in range(loss_data_len):
+                            for tmp_idx_loss in range(loss_data_len):
                                 if key in value_keys:
                                     key_val_redundancy = -0.01
                                 else:
@@ -514,7 +514,7 @@ def get_data_from_file(database, preset_cfg):
 
                         loss_data_len = cur_len - 1
                         if loss_data_len > 0:
-                            for tmp_idx in range(loss_data_len):
+                            for tmp_idx_loss in range(loss_data_len):
                                 if key in value_keys:
                                     key_val_redundancy = -0.01
                                 else:
@@ -643,9 +643,9 @@ def get_data_from_file(database, preset_cfg):
                     try:
                         data_tmp = 0
                         len_tmp = len(database[_trans_item][data_index])
-                        for tmp_idx in range(len_tmp):
+                        for tmp_idx_c2i in range(len_tmp):
                             data_tmp += ord(database[_trans_item]
-                                            [data_index][tmp_idx])
+                                            [data_index][tmp_idx_c2i])
                     except ValueError:
                         data_tmp = -0.01
                     data_tmp_array.append(data_tmp)
