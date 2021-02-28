@@ -47,7 +47,6 @@ CFG_FILE_PATH = join(dirname(abspath(__file__)), "cfg")
 le = LabelEncoder()
 
 DEBUG_FLAG = False
-PSEUDO_DATA = False
 
 COLOR_SEQ = ["black", "blue", "red", "green", "orange", "seagreen"]
 for tmp_color in ["goldenrod", "slateblue", "magenta", "cyan", "orchid"]:
@@ -114,7 +113,8 @@ def update_cfg_files():
 
         cur_file_type = None
         for line_data in fl:
-            file_name_type = find_word_between_two_words(line_data, '\\<', "\\>")
+            file_name_type = find_word_between_two_words(
+                line_data, '\\<', "\\>")
 
             if file_name_type != "":  # change mode
                 if file_name_type in possible_key_words:
@@ -350,64 +350,63 @@ def get_data_from_file():
     product_name_found_flag = False
     non_value_keys = []
     value_keys = []
-    if not PSEUDO_DATA:
-        root = tk.Tk()
-        g_screen_dpi = root.winfo_pixels('1i')
-        root.tk.call('tk', 'scaling', 10.0)
-        root.withdraw()
 
-        file_path = filedialog.askopenfilename()
-        fr = open(file_path, "r", encoding='utf-8')
-        fl = fr.readlines()
+    root = tk.Tk()
+    g_screen_dpi = root.winfo_pixels('1i')
+    root.tk.call('tk', 'scaling', 10.0)
+    root.withdraw()
 
-    else:
-        fl = "key_001/ key_002/ key_003  = data_001/ data_002/ data_003"
+    file_path = filedialog.askopenfilename()
+    with open(file_path, "r", encoding='utf-8') as f:
+        fr = f.read()
+        fl = fr.splitlines()
 
-    # For find the suitable total length
-    data_base["product_name"] = ""
-    for line_data in fl:
-        line_data = remove_time_stamp_in_prefix(line_data)
+        # For find the suitable total length
+        data_base["product_name"] = ""
+        for line_data in fl:
+            line_data = remove_time_stamp_in_prefix(line_data)
 
-        if(check_data_line(line_data)):
-            debug_print(line_data)
+            if(check_data_line(line_data)):
+                debug_print(line_data)
 
-            tmp_len = len(line_data.split('='))
-            field = line_data.split('=')[0]
-            value = line_data.split('=')[1]
-            if tmp_len > 2:
-                for tmp_idx in range(2, tmp_len):
-                    value += line_data.split('=')[tmp_idx]
+                tmp_len = len(line_data.split('='))
+                field = line_data.split('=')[0]
+                value = line_data.split('=')[1]
+                if tmp_len > 2:
+                    for tmp_idx in range(2, tmp_len):
+                        value += line_data.split('=')[tmp_idx]
 
-            field = field.split('/')
-            if len(field) > 1:
-                value = value.split('/')
-            else:
-                value = [str(value)]
-
-            for tmp_idx in range(min(len(field), len(value))):
-                field[tmp_idx] = field[tmp_idx].strip()
-                value[tmp_idx] = value[tmp_idx].strip()
-
-            for tmp_idx in range(min(len(field), len(value))):
-                key = field[tmp_idx].strip()
-                key_val = value[tmp_idx].strip()
-                found = find_word_before_suffix(key_val, "dBm")
-                if found != '':
-                    key_val = found.strip()
-                if key in data_base:
-                    if key in value_keys:
-                        try:
-                            key_val = float(key_val)
-                        except ValueError:
-                            key_val = -0.01
-                    data_base[key].append(key_val)
+                field = field.split('/')
+                if len(field) > 1:
+                    value = value.split('/')
                 else:
-                    if key_val.lstrip('-+').isnumeric():
-                        value_keys.append(key)
-                        key_val = float(key_val)
+                    value = [str(value)]
+
+                for tmp_idx in range(min(len(field), len(value))):
+                    field[tmp_idx] = field[tmp_idx].strip()
+                    value[tmp_idx] = value[tmp_idx].strip()
+
+                for tmp_idx in range(min(len(field), len(value))):
+                    key = field[tmp_idx].strip()
+                    key_val = value[tmp_idx].strip()
+                    found = find_word_before_suffix(key_val, "dBm")
+                    if found != '':
+                        key_val = found.strip()
+                    if key in data_base:
+                        if key in value_keys:
+                            try:
+                                key_val = float(key_val)
+                            except ValueError:
+                                key_val = -0.01
+                        data_base[key].append(key_val)
                     else:
-                        non_value_keys.append(key)
-                    data_base[key] = [key_val]
+                        if key_val.lstrip('-+').isnumeric():
+                            value_keys.append(key)
+                            key_val = float(key_val)
+                        else:
+                            non_value_keys.append(key)
+                        data_base[key] = [key_val]
+        f.close()
     data_base["value_keys"] = value_keys
     data_base["non_value_keys"] = non_value_keys
 
@@ -418,7 +417,6 @@ def get_data_from_file():
 
     counts = np.bincount(item_nums)
     data_len_most = np.argmax(counts)
-    fr.close()
 
     for key in data_base.keys():
         if len(data_base[key]) == data_len_most:
