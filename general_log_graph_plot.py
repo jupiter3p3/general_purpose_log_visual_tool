@@ -192,8 +192,8 @@ def get_preset_cfg_from_file(preset_file, preset_cfg):
             if preset_mode == "replace_words":
                 tmp_line = line_data.split("=")
                 if(len(tmp_line) == 2):
-                    for tmp_idx in range(len(tmp_line)):
-                        tmp_line[tmp_idx] = tmp_line[tmp_idx].strip()
+                    for _, item in enumerate(tmp_line):
+                        item = item.strip()
                     preset_cfg.data['_old_words'].append(tmp_line[0])
                     preset_cfg.data['_new_words'].append(tmp_line[1])
             elif preset_mode == "remove_words":
@@ -204,8 +204,8 @@ def get_preset_cfg_from_file(preset_file, preset_cfg):
                 preset_cfg.data['_key_value_sep'].append(tmp_line)
             elif preset_mode == "post_process":
                 tmp_line = line_data.split(";")
-                for tmp_idx in range(len(tmp_line)):
-                    tmp_line[tmp_idx] = tmp_line[tmp_idx].strip()
+                for _, item in enumerate(tmp_line):
+                    item = item.strip()
                 if(len(tmp_line) == 4):
                     preset_cfg.data['_post_new_item'].append(tmp_line[0])
                     preset_cfg.data['_post_item_01'].append(tmp_line[1])
@@ -222,8 +222,8 @@ def get_preset_cfg_from_file(preset_file, preset_cfg):
                     preset_cfg.data['_format_format'].append(tmp_line[4])
             elif preset_mode == "alias":
                 tmp_line = line_data.split(";")
-                for tmp_idx in range(len(tmp_line)):
-                    tmp_line[tmp_idx] = tmp_line[tmp_idx].strip()
+                for _, item in enumerate(tmp_line):
+                    item = item.strip()
                 if(len(tmp_line) == 2):
                     preset_cfg.data['_alias_new_item'].append(tmp_line[0])
                     preset_cfg.data['_alias_ori_item'].append(tmp_line[1])
@@ -964,14 +964,14 @@ class LogFigure:
 
         if text_flag:  # hide axis and add annotate
             para.get_yaxis().set_visible(False)
-            for tmp_idx in range(len(labels)):
-                if tmp_idx < (len(labels)-1):
-                    tmp_text_y_pos = tmp_idx+(ylim_ext*cur_annotate_count)
-                    plt.annotate(labels[tmp_idx], (-1, tmp_text_y_pos),
+            for i, _ in enumerate(labels):
+                if i < (len(labels)-1):
+                    tmp_text_y_pos = i+(ylim_ext*cur_annotate_count)
+                    plt.annotate(labels[i], (-1, tmp_text_y_pos),
                                  color=cur_color, zorder=cur_zorder+1)
                 else:
-                    tmp_text_y_pos = tmp_idx-(ylim_ext*cur_annotate_count)
-                    plt.annotate(labels[tmp_idx], (-1, tmp_text_y_pos),
+                    tmp_text_y_pos = i-(ylim_ext*cur_annotate_count)
+                    plt.annotate(labels[i], (-1, tmp_text_y_pos),
                                  color=cur_color, zorder=cur_zorder+1)
             self.cur_annotate_count += 1
         else:
