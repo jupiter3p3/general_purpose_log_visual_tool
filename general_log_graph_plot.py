@@ -268,8 +268,7 @@ def get_win_pos_cfg(index):
 
 
 def debug_print(data):
-    if False:
-        print(data)
+    # print(data)
 
 
 def label_incremental(array):
@@ -514,7 +513,7 @@ def get_data_from_file(database, preset_cfg):
 
                         loss_data_len = cur_len - 1
                         if loss_data_len > 0:
-                            for tmp_idx_loss in range(loss_data_len):
+                            for _ in range(loss_data_len):
                                 if key in value_keys:
                                     key_val_redundancy = -0.01
                                 else:
