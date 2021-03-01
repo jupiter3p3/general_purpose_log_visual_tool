@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['general_log_graph_plot.py'],
-             pathex=['D:\\z00_github_warehouse\\general_purpose_log_visual_tool'],
+             pathex=['C:\\'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -27,7 +27,7 @@ exe = EXE(pyz,
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
-          upx=True,
+          upx=False,
           upx_exclude=[],
           runtime_tmpdir=None,
           console=True , icon='skate_icon_133135.ico')
