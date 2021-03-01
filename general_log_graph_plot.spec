@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['general_log_graph_plot.py'],
-             pathex=['C:\\','dll'],
+             pathex=['.dll'],
              binaries=[],
              datas=[],
              hiddenimports=['scipy.spatial.transform._rotation_groups','scipy.special.cython_special'],
@@ -30,4 +30,4 @@ exe = EXE(pyz,
           upx=False,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=True , icon='dll\\skate_icon_133135.ico')
+          console=True , icon='.dll\\skate_icon_133135.ico')
