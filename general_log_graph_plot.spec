@@ -4,8 +4,8 @@ block_cipher = None
 
 
 a = Analysis(['general_log_graph_plot.py'],
-             pathex=['C:\\'],
-             binaries=[('C:\\Python37\\Lib\\site-packages\\sklearn\\.libs\\VCRUNTIME140_1.dll', '.dll'),('C:\\Python37\\Lib\\site-packages\\sklearn\\.libs\\vcomp140.dll', '.dll')],
+             pathex=['C:\\','dll'],
+             binaries=[],
              datas=[],
              hiddenimports=[],
              hookspath=[],
