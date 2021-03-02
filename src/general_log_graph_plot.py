@@ -35,8 +35,15 @@ from os.path import abspath
 
 class CodeVersionInfo:
     def __init__(self):
-        self.code_version = "0.0.3"
-        self.version_date = "20210228"
+        self.code_version = "0.0.3_a"
+        self.version_date = "20210302"
+
+
+class FigEnlargeRatio:
+    def __init__(self):
+        self.screen_ratio_check = False
+        self.ratio_x = 1.0
+        self.ratio_y = 1.0
 
 
 le = LabelEncoder()
@@ -773,80 +780,91 @@ class LogFigure:
         self.code_version = codeversioninfo.code_version
         self.version_date = codeversioninfo.version_date
 
+    def set_fig_ratio(self, fig_ratio):
+        if fig_ratio.screen_ratio_check:
+            self.ratio_x = fig_ratio.ratio_x
+            self.ratio_y = fig_ratio.ratio_y
+        else:
+            win8_higher_os_flag = False
+
+            disp_x_size_pixel = GetSystemMetrics(0)
+            disp_y_size_pixel = GetSystemMetrics(1)
+
+            dpiX = ctypes.c_uint()
+            dpiY = ctypes.c_uint()
+
+            monitors = EnumDisplayMonitors()
+
+            windows_version = platform().split('-')[1]
+            if windows_version in ('10', '8'):
+                win8_higher_os_flag = True
+            elif int(windows_version) >= 8:
+                win8_higher_os_flag = True
+
+            if (len(monitors) == 1):
+                monitor = monitors[0]
+                if win8_higher_os_flag:
+                    ctypes.windll.shcore.GetDpiForMonitor(monitor[0].handle, 0,
+                                                          ctypes.byref(dpiX),
+                                                          ctypes.byref(dpiY))
+
+                    debug_print(f"Monitor (hmonitor: {monitor[0]}) = dpiX:\
+                                {dpiX.value}, dpiY: {dpiY.value}")
+            awareness = ctypes.c_int()
+
+            if win8_higher_os_flag:
+                shcore = ctypes.windll.shcore
+                errorCode = shcore.GetProcessDpiAwareness(0,
+                                                          ctypes.byref(awareness))
+            else:
+                errorCode = 1
+
+            if errorCode != 0:
+                debug_print("GetProcessDpiAwareness errorCode = %s" %
+                            (errorCode))
+            else:
+                debug_print("GetProcessDpiAwareness = %s" % (awareness.value))
+            ori_set_value = awareness.value
+
+            if ori_set_value == 0:
+                if win8_higher_os_flag:
+                    # Set DPI Awareness  (Windows 10 and 8)
+                    # errorCode = ctypes.windll.shcore.SetProcessDpiAwareness(2)
+                    # errorCode = ctypes.windll.shcore.SetProcessDpiAwareness(1)
+                    errorCode = ctypes.windll.shcore.SetProcessDpiAwareness(1)
+                    # the argument is the awareness level, which can be 0, 1 or 2:
+                else:  # bypass other windows
+                    success = ctypes.windll.user32.SetProcessDPIAware()
+                    if success:
+                        errorCode = 0
+                    else:
+                        errorCode = 1
+
+            monitors = EnumDisplayMonitors()
+
+            if (len(monitors) == 1):
+                monitor = monitors[0]
+                if win8_higher_os_flag:
+                    ctypes.windll.shcore.GetDpiForMonitor(monitor[0].handle, 0,
+                                                          ctypes.byref(dpiX),
+                                                          ctypes.byref(dpiY))
+
+                    debug_print(f"Monitor (hmonitor: {monitor[0]}) = dpiX:\
+                                {dpiX.value}, dpiY: {dpiY.value}")
+
+            if not self.screen_ratio_check:
+                fig_ratio.ratio_x = float(
+                    GetSystemMetrics(0)/disp_x_size_pixel)
+                fig_ratio.ratio_y = float(
+                    GetSystemMetrics(1)/disp_y_size_pixel)
+                self.ratio_x = fig_ratio.ratio_x
+                self.ratio_y = fig_ratio.ratio_y
+                fig_ratio.screen_ratio_check = True
+
     def gen_new_figure(self):
         self.cur_data_count = 0
-        win8_higher_os_flag = False
-
-        disp_x_size_pixel = GetSystemMetrics(0)
-        disp_y_size_pixel = GetSystemMetrics(1)
-
-        dpiX = ctypes.c_uint()
-        dpiY = ctypes.c_uint()
-
-        monitors = EnumDisplayMonitors()
-
-        windows_version = platform().split('-')[1]
-        if windows_version in ('10', '8'):
-            win8_higher_os_flag = True
-        elif int(windows_version) >= 8:
-            win8_higher_os_flag = True
-
-        if (len(monitors) == 1):
-            monitor = monitors[0]
-            if win8_higher_os_flag:
-                ctypes.windll.shcore.GetDpiForMonitor(monitor[0].handle, 0,
-                                                      ctypes.byref(dpiX),
-                                                      ctypes.byref(dpiY))
-
-                debug_print(f"Monitor (hmonitor: {monitor[0]}) = dpiX:\
-                            {dpiX.value}, dpiY: {dpiY.value}")
-        awareness = ctypes.c_int()
-
-        if win8_higher_os_flag:
-            shcore = ctypes.windll.shcore
-            errorCode = shcore.GetProcessDpiAwareness(0,
-                                                      ctypes.byref(awareness))
-        else:
-            errorCode = 1
-
-        if errorCode != 0:
-            debug_print("GetProcessDpiAwareness errorCode = %s" % (errorCode))
-        else:
-            debug_print("GetProcessDpiAwareness = %s" % (awareness.value))
-        ori_set_value = awareness.value
-
-        if ori_set_value == 0:
-            if win8_higher_os_flag:
-                # Set DPI Awareness  (Windows 10 and 8)
-                # errorCode = ctypes.windll.shcore.SetProcessDpiAwareness(2)
-                # errorCode = ctypes.windll.shcore.SetProcessDpiAwareness(1)
-                errorCode = ctypes.windll.shcore.SetProcessDpiAwareness(1)
-                # the argument is the awareness level, which can be 0, 1 or 2:
-            else:  # bypass other windows
-                success = ctypes.windll.user32.SetProcessDPIAware()
-                if success:
-                    errorCode = 0
-                else:
-                    errorCode = 1
-
-        monitors = EnumDisplayMonitors()
-
-        if (len(monitors) == 1):
-            monitor = monitors[0]
-            if win8_higher_os_flag:
-                ctypes.windll.shcore.GetDpiForMonitor(monitor[0].handle, 0,
-                                                      ctypes.byref(dpiX),
-                                                      ctypes.byref(dpiY))
-
-                debug_print(f"Monitor (hmonitor: {monitor[0]}) = dpiX:\
-                            {dpiX.value}, dpiY: {dpiY.value}")
 
         tmp_dpi = self.screen_dpi
-
-        if not self.screen_ratio_check:
-            self.ratio_x = float(GetSystemMetrics(0)/disp_x_size_pixel)
-            self.ratio_y = float(GetSystemMetrics(1)/disp_y_size_pixel)
-            self.screen_ratio_check = True
 
         x_size_inch = self.ratio_x * GetSystemMetrics(0) / 2 / tmp_dpi
         y_size_inch = self.ratio_y * GetSystemMetrics(1) / 2 / tmp_dpi * 0.88
@@ -1055,9 +1073,10 @@ class LogFigure:
         return self.total_fig_num
 
 
-def init_cur_fig(cur_fig, version_info, screen_dpi):
+def init_cur_fig(cur_fig, version_info, screen_dpi, fig_ratio):
     cur_fig.set_version_info(version_info)
     cur_fig.set_screen_dpi(screen_dpi)
+    cur_fig.set_fig_ratio(fig_ratio)
     cur_fig.gen_new_figure()
 
 
@@ -1079,7 +1098,7 @@ def fig_operation(fig, operation_item, avg_flag):
     return avg_flag
 
 
-def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi, fig):
+def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi, fig, fig_ratio):
     first_fig_flag = True
     avg_flag = False
     cur_fig_num = 0
@@ -1102,7 +1121,7 @@ def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi
                     fig[-1].set_total_fig_num(cur_fig_num)
                     cur_fig_num = fig[-1].plot_figure()
                     fig.append(LogFigure())  # first figure
-                    init_cur_fig(fig[-1], version_info, screen_dpi)
+                    init_cur_fig(fig[-1], version_info, screen_dpi, fig_ratio)
                     fig[-1].set_title(new_fig_title)
 
                 if(len(preset_cfg.data['_time_step_sec']) > 0):
@@ -1148,6 +1167,8 @@ def main():
     cfg_ref_file_with_path = join(cur_path, _cfg_files.ref_file)
     version_info = CodeVersionInfo()
 
+    fig_ratio = FigEnlargeRatio()
+
     with open(cfg_ref_file_with_path, 'w') as fw:
         for key in database.keys():
             if key not in RESERVED_WORDS:
@@ -1156,10 +1177,10 @@ def main():
         fw.close()
 
     fig.append(LogFigure())  # first figure
-    init_cur_fig(fig[-1], version_info, screen_dpi)
+    init_cur_fig(fig[-1], version_info, screen_dpi, fig_ratio)
 
     cur_fig_num = plot_figs(cfg_file_with_path, preset_cfg,
-                            database, version_info, screen_dpi, fig)
+                            database, version_info, screen_dpi, fig, fig_ratio)
 
     fig[-1].set_total_fig_num(cur_fig_num)
     fig[-1].plot_figure()  # last figure
