@@ -6,6 +6,7 @@ To generatelog visual graph
 # 0.0.1  |20210217   |jupiter    |Draft version                         |
 # 0.0.2  |20210226   |jupiter    |Move configuration files to 'cfg'     |
 # 0.0.3  |20210228   |jupiter    |Check code via DeepSource and fix it  |
+# 0.0.4  |20210312   |jupiter    |Add function to dump data to file     |
 '''
 
 from os.path import dirname
@@ -30,13 +31,20 @@ from os.path import isfile
 from os.path import splitext
 from os.path import basename
 from os.path import abspath
+from os.path import exists
+from os import makedirs
+from os import remove
+from os import listdir
 # from os import chdir
+
+import csv
+import shutil
 
 
 class CodeVersionInfo:
     def __init__(self):
-        self.code_version = "0.0.3_a"
-        self.version_date = "20210302"
+        self.code_version = "0.0.4"
+        self.version_date = "20210312"
 
 
 class FigEnlargeRatio:
@@ -449,7 +457,7 @@ def get_data_from_file(database, preset_cfg):
                 _old_words = preset_cfg.data['_old_words'][tmp_idx]
                 _new_words = preset_cfg.data['_new_words'][tmp_idx]
                 line_data = line_data.replace(_old_words, _new_words)
-            # replace words start end
+            # replace words end
 
             # remove pattern start
             for tmp_idx in range(len(preset_cfg.data['_remove_words'])):
@@ -469,6 +477,9 @@ def get_data_from_file(database, preset_cfg):
             else:
                 _key_value_sep = '='
             # update _key_value_sep end
+
+            line_data = line_data.replace(_key_value_sep, '=')
+            _key_value_sep = '='
 
             if not product_name_found_flag:
                 found = find_product_name(line_data)
@@ -541,7 +552,7 @@ def get_data_from_file(database, preset_cfg):
     database["value_keys"] = value_keys
     database["non_value_keys"] = non_value_keys
 
-    # start post precess
+    # post precess start
     # format
     for tmp_idx in range(len(preset_cfg.data['_format_new_item'])):
         _format_new_item = preset_cfg.data['_format_new_item'][tmp_idx]
@@ -574,7 +585,7 @@ def get_data_from_file(database, preset_cfg):
             database = database_insert_data(
                 database, database[_alias_ori_item],
                 _alias_new_item, is_value)
-    # alias stop
+    # alias end
 
     # calculation start
     for tmp_idx in range(len(preset_cfg.data['_post_new_item'])):
@@ -671,7 +682,7 @@ def get_data_from_file(database, preset_cfg):
                     database, data_tmp_array, _trans_item, True)
     # trans_data end
 
-    return database, screen_dpi
+    return database, screen_dpi, file_path
 
 
 def get_plot_data_with_le(data):
@@ -751,12 +762,16 @@ class LogFigure:
         self.total_fig_num = 0
         self.code_version = '0.0.0'
         self.version_date = '20999999'
+        self.save_data = False
 
     def set_show_max(self, flag):
         self.show_max = flag
 
     def set_show_min(self, flag):
         self.show_min = flag
+
+    def set_save_data(self, flag):
+        self.save_data = flag
 
     def set_win_position(self, win_position):
         self.win_position = win_position
@@ -1040,12 +1055,12 @@ class LogFigure:
                     para.spines["right"].set_visible(True)
                 if self.numeric_idx_fig_num_array[tmp_idx] == 0:
                     cur_numeric_count += 1
-            para.set_xlabel("Time (seconds)")
+            para.set_xlabel("times or seconds")
         self.host.legend(lines, [l.get_label() for l in lines],
                          loc='upper right')
 
         plt.title("%s analysis" % (self.title))
-        plt.xlabel("Time (seconds)")
+        plt.xlabel("times or seconds")
 
         left, right = plt.xlim()
         bottom, top = plt.ylim()
@@ -1095,6 +1110,10 @@ def fig_operation(fig, operation_item, avg_flag):
         fig.set_show_max(False)
     elif operation_item == "hide min":
         fig.set_show_min(False)
+    elif operation_item == "save data":
+        fig.set_save_data(True)
+    elif operation_item == "unsave data":
+        fig.set_save_data(False)
     return avg_flag
 
 
@@ -1102,6 +1121,7 @@ def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi
     first_fig_flag = True
     avg_flag = False
     cur_fig_num = 0
+    save_data_with_new_file = False
     with open(cfg_file_with_path, "r") as f:
 
         fr = f.read()
@@ -1117,6 +1137,7 @@ def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi
                 if first_fig_flag:
                     first_fig_flag = False
                     fig[-1].set_title(new_fig_title)
+                    save_data_with_new_file = True
                 else:
                     fig[-1].set_total_fig_num(cur_fig_num)
                     cur_fig_num = fig[-1].plot_figure()
@@ -1135,6 +1156,28 @@ def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi
                     fig[-1].gen_figure(database, line_data)
                     if first_fig_flag:
                         first_fig_flag = False
+
+                    #  record data to file start
+                    if fig[-1].save_data and line_data in database:
+                        save_data_path = join(
+                            dirname(abspath(__file__)), "output")
+                        if not exists(save_data_path):
+                            makedirs(save_data_path)
+                        output_file = "%s.log" % (fig[-1].title)
+                        output_file_with_path = join(
+                            save_data_path, output_file)
+                        if save_data_with_new_file:
+                            if exists(output_file_with_path):
+                                remove(output_file_with_path)
+                            save_data_with_new_file = False
+                        with open(output_file_with_path, mode='a', newline='', encoding='utf-8') as save_data_file:
+                            save_data_writer = csv.writer(
+                                save_data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                            write_data = database[line_data][:]
+                            write_data.insert(0, line_data)
+                            save_data_writer.writerow(write_data)
+                    #  record data to file end
+
                 else:  # average the data and name original_name_avg
                     if line_data in database:
                         tmp_data_len = len(database[line_data])
@@ -1157,7 +1200,7 @@ def main():
     preset_file = _cfg_files.preset_file
     get_preset_cfg_from_file(preset_file, preset_cfg)
     log_data = LogDatabase()
-    log_data.database, screen_dpi = get_data_from_file(
+    log_data.database, screen_dpi, log_file_with_path = get_data_from_file(
         log_data.database, preset_cfg)
     database = log_data.database
     fig = []
@@ -1184,6 +1227,29 @@ def main():
 
     fig[-1].set_total_fig_num(cur_fig_num)
     fig[-1].plot_figure()  # last figure
+
+    #  collect record files start
+    check_record_data = True
+    output_path = join(dirname(abspath(__file__)), "output")
+    if not exists(output_path):
+        check_record_data = False
+        # makedirs(output_path)
+
+    if check_record_data:
+        confirm_per_output_path = True
+        file_names = listdir(output_path)
+
+        for file_name in file_names:
+            if splitext(file_name)[1] == '.log':
+                if confirm_per_output_path:
+                    per_output_path = join(output_path, splitext(
+                        basename(log_file_with_path))[0])
+                    if not exists(per_output_path):
+                        makedirs(per_output_path)
+                    confirm_per_output_path = False
+                shutil.move(join(output_path, file_name),
+                            join(per_output_path, file_name))
+    #  collect record files end
 
     plt.ion()
     plt.show()
