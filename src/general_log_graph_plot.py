@@ -43,8 +43,8 @@ import shutil
 
 class CodeVersionInfo:
     def __init__(self):
-        self.code_version = "0.0.4"
-        self.version_date = "20210312"
+        self.code_version = "0.0.4a"
+        self.version_date = "20210313"
 
 
 class FigEnlargeRatio:
@@ -453,21 +453,18 @@ def get_data_from_file(database, preset_cfg):
             line_data = remove_time_stamp_in_prefix(line_data)
 
             # replace words start
-            for tmp_idx in range(len(preset_cfg.data['_old_words'])):
-                _old_words = preset_cfg.data['_old_words'][tmp_idx]
+            for tmp_idx, _old_words in enumerate(preset_cfg.data['_old_words']):
                 _new_words = preset_cfg.data['_new_words'][tmp_idx]
                 line_data = line_data.replace(_old_words, _new_words)
             # replace words end
 
             # remove pattern start
-            for tmp_idx in range(len(preset_cfg.data['_remove_words'])):
-                _remove_words = preset_cfg.data['_remove_words'][tmp_idx]
+            for _, _remove_words in enumerate(preset_cfg.data['_remove_words']):
                 line_data = line_data.replace(_remove_words, '')
             # remove pattern end
 
             # use one format to segment data start
-            for tmp_idx in range(len(preset_cfg.data['_data_seg'])):
-                _data_seg = preset_cfg.data['_data_seg'][tmp_idx]
+            for _, _data_seg in enumerate(preset_cfg.data['_data_seg']):
                 line_data = line_data.replace(_data_seg, '/')
             # use one format to segment data end
 
@@ -554,8 +551,7 @@ def get_data_from_file(database, preset_cfg):
 
     # post precess start
     # format
-    for tmp_idx in range(len(preset_cfg.data['_format_new_item'])):
-        _format_new_item = preset_cfg.data['_format_new_item'][tmp_idx]
+    for tmp_idx, _format_new_item in enumerate(preset_cfg.data['_format_new_item']):
         _format_format = preset_cfg.data['_format_format'][tmp_idx]
         _format_item_01 = preset_cfg.data['_format_item_01'][tmp_idx]
         _format_item_02 = preset_cfg.data['_format_item_02'][tmp_idx]
@@ -575,8 +571,7 @@ def get_data_from_file(database, preset_cfg):
                                             _format_new_item, False)
 
     # alias start
-    for tmp_idx in range(len(preset_cfg.data['_alias_ori_item'])):
-        _alias_ori_item = preset_cfg.data['_alias_ori_item'][tmp_idx]
+    for tmp_idx, _alias_ori_item in enumerate(preset_cfg.data['_alias_ori_item']):
         _alias_new_item = preset_cfg.data['_alias_new_item'][tmp_idx]
 
         if _alias_ori_item in database.keys() and _alias_new_item not in database.keys():
@@ -588,8 +583,7 @@ def get_data_from_file(database, preset_cfg):
     # alias end
 
     # calculation start
-    for tmp_idx in range(len(preset_cfg.data['_post_new_item'])):
-        _post_new_item = preset_cfg.data['_post_new_item'][tmp_idx]
+    for tmp_idx, _post_new_item in enumerate(preset_cfg.data['_post_new_item']):
         _post_item_01 = preset_cfg.data['_post_item_01'][tmp_idx]
         _post_op_code = preset_cfg.data['_post_op_code'][tmp_idx]
         _post_item_02 = preset_cfg.data['_post_item_02'][tmp_idx]
@@ -649,15 +643,14 @@ def get_data_from_file(database, preset_cfg):
     database["non_value_keys"] = list(set(database["non_value_keys"]))
 
     # trans_data start
-    for tmp_idx in range(len(preset_cfg.data['_trans_item'])):
-        _trans_item = preset_cfg.data['_trans_item'][tmp_idx]
+    for tmp_idx, _trans_item in enumerate(preset_cfg.data['_trans_item']):
         _trans_op_code = preset_cfg.data['_trans_op_code'][tmp_idx]
         if _trans_item in database.keys():
             if _trans_op_code == 'hex2dec':
                 data_tmp_array = []
-                for data_index in range(len(database[_trans_item])):
+                for _, source_data in enumerate(database[_trans_item]):
                     try:
-                        data_tmp = int(database[_trans_item][data_index], 16)
+                        data_tmp = int(source_data, 16)
                     except ValueError:
                         data_tmp = -0.01
                     data_tmp_array.append(data_tmp)
@@ -667,13 +660,12 @@ def get_data_from_file(database, preset_cfg):
                 # database["value_keys"].append(_trans_item)
             elif _trans_op_code == 'char2int':
                 data_tmp_array = []
-                for data_index in range(len(database[_trans_item])):
+                for _, source_data in enumerate(database[_trans_item]):
                     try:
                         data_tmp = 0
-                        len_tmp = len(database[_trans_item][data_index])
+                        len_tmp = len(source_data)
                         for tmp_idx_c2i in range(len_tmp):
-                            data_tmp += ord(database[_trans_item]
-                                            [data_index][tmp_idx_c2i])
+                            data_tmp += ord(source_data[tmp_idx_c2i])
                     except ValueError:
                         data_tmp = -0.01
                     data_tmp_array.append(data_tmp)
@@ -1038,8 +1030,7 @@ class LogFigure:
         self.set_win_position(self.total_fig_num)
 
         tkw = dict(size=len(self.parameters)+1, width=1.5)  # Same color
-        for tmp_idx in range(len(self.parameters)):
-            para = self.parameters[tmp_idx]
+        for tmp_idx, para in enumerate(self.parameters):
             pic_tmp = self.pictures[tmp_idx]
             para.tick_params(axis='y', colors=pic_tmp.get_color(), **tkw)
 
