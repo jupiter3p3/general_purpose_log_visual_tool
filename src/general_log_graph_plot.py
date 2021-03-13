@@ -292,8 +292,7 @@ def get_win_pos_cfg(index):
 
 
 def debug_print(data):
-    debug_flag = False
-    if debug_flag:
+    if len(data) > 5000:
         print(data)
 
 
@@ -323,7 +322,7 @@ def find_word_before_suffix(text, post_word):
 
 def find_word_after_prefix(text, pre_word):
     try:
-        found = re.search('%s(.+?)' % (pre_word), text).group(1)
+        _ = re.search('%s(.+?)' % (pre_word), text).group(1)
         found = text.split(pre_word)[1]
     except AttributeError:
         found = ''  # apply your error handling
@@ -679,13 +678,14 @@ def get_data_from_file(database, preset_cfg):
 
 def get_plot_data_with_le(data):
     ndata = np.array(data)
-    index_incremental = True
-    if index_incremental:
-        index, labels = label_incremental(ndata)
-    else:
-        le.fit(ndata)
-        index = list(le.transform(ndata))
-        labels = le.classes_
+    index, labels = label_incremental(ndata)
+    # index_incremental = True
+    # if index_incremental:
+    #     index, labels = label_incremental(ndata)
+    # else:
+    #     le.fit(ndata)
+    #     index = list(le.transform(ndata))
+    #     labels = le.classes_
     return index, labels
 
 
@@ -846,6 +846,10 @@ class LogFigure:
                         errorCode = 0
                     else:
                         errorCode = 1
+
+                if errorCode != 0:
+                    debug_print("SetProcessDPIAware errorCode = %d" %
+                                (errorCode))
 
             monitors = EnumDisplayMonitors()
 
