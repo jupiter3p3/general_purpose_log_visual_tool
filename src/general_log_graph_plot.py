@@ -1,6 +1,6 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 Version history.
 
 To generatelog visual graph
@@ -9,7 +9,7 @@ To generatelog visual graph
 # 0.0.2  |20210226   |jupiter    |Move configuration files to 'cfg'     |
 # 0.0.3  |20210228   |jupiter    |Check code via DeepSource and fix it  |
 # 0.0.4  |20210312   |jupiter    |Add function to dump data to file     |
-'''
+"""
 
 from os.path import dirname
 import tkinter as tk
