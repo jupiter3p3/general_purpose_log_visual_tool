@@ -368,6 +368,42 @@ def database_insert_data(database, new_data, data_key, value_flag):
     return database
 
 
+def open_file_and_check_most_key_length(database, value_keys, non_value_keys):
+    file_path = filedialog.askopenfilename()
+    with open(file_path, "r", encoding='utf-8') as f:
+        fr = f.read()
+        fl = fr.splitlines()
+
+        # For find the suitable total length
+        database["product_name"] = ""
+        for line_data in fl:
+            line_data = remove_time_stamp_in_prefix(line_data)
+
+            if(check_data_line(line_data)):
+                debug_print(line_data)
+
+                tmp_len = len(line_data.split('='))
+                field = line_data.split('=')[0]
+                value = line_data.split('=')[1]
+                if tmp_len > 2:
+                    for tmp_idx in range(2, tmp_len):
+                        value += line_data.split('=')[tmp_idx]
+
+                field, value = separate_filed_and_value(field, value)
+
+                for tmp_idx in range(min(len(field), len(value))):
+                    key = field[tmp_idx].strip()
+                    key_val = value[tmp_idx].strip()
+                    found = find_word_before_suffix(key_val, "dBm")
+                    if found != '':
+                        key_val = found.strip()
+                    read_key_and_keyval_to_database(
+                        database, value_keys, non_value_keys, key, key_val, False, 0)
+        f.close()
+    database["value_keys"] = value_keys
+    database["non_value_keys"] = non_value_keys
+    return file_path
+
 def check_data_loss(database, value_keys, key, cur_len):
     loss_data_len = cur_len - 1 - len(database[key])
     if loss_data_len > 0:
@@ -414,6 +450,7 @@ def read_key_and_keyval_to_database(database, value_keys, non_value_keys, key, k
             check_data_loss(database, value_keys, key, cur_len)
 
 
+
 def get_data_from_file(database, preset_cfg):
     product_name_found_flag = False
     non_value_keys = []
@@ -424,39 +461,7 @@ def get_data_from_file(database, preset_cfg):
     root.tk.call('tk', 'scaling', 10.0)
     root.withdraw()
 
-    file_path = filedialog.askopenfilename()
-    with open(file_path, "r", encoding='utf-8') as f:
-        fr = f.read()
-        fl = fr.splitlines()
-
-        # For find the suitable total length
-        database["product_name"] = ""
-        for line_data in fl:
-            line_data = remove_time_stamp_in_prefix(line_data)
-
-            if(check_data_line(line_data)):
-                debug_print(line_data)
-
-                tmp_len = len(line_data.split('='))
-                field = line_data.split('=')[0]
-                value = line_data.split('=')[1]
-                if tmp_len > 2:
-                    for tmp_idx in range(2, tmp_len):
-                        value += line_data.split('=')[tmp_idx]
-
-                field, value = separate_filed_and_value(field, value)
-
-                for tmp_idx in range(min(len(field), len(value))):
-                    key = field[tmp_idx].strip()
-                    key_val = value[tmp_idx].strip()
-                    found = find_word_before_suffix(key_val, "dBm")
-                    if found != '':
-                        key_val = found.strip()
-                    read_key_and_keyval_to_database(
-                        database, value_keys, non_value_keys, key, key_val, False, 0)
-        f.close()
-    database["value_keys"] = value_keys
-    database["non_value_keys"] = non_value_keys
+    file_path = open_file_and_check_most_key_length(database, value_keys, non_value_keys)
 
     item_nums = []
 
