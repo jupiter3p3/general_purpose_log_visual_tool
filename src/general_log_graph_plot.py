@@ -1,13 +1,12 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
-To generatelog visual graph
+"""Version history."""
+
 # Version|Date       |Author     |Note                                  |
 # 0.0.1  |20210217   |jupiter    |Draft version                         |
 # 0.0.2  |20210226   |jupiter    |Move configuration files to 'cfg'     |
 # 0.0.3  |20210228   |jupiter    |Check code via DeepSource and fix it  |
 # 0.0.4  |20210312   |jupiter    |Add function to dump data to file     |
-'''
 
 from os.path import dirname
 import tkinter as tk
@@ -17,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 from os.path import join
-import random
+# import random
 import datetime
 from sklearn.preprocessing import LabelEncoder
 from pylab import get_current_fig_manager
@@ -43,12 +42,14 @@ import shutil
 
 class CodeVersionInfo:
     def __init__(self):
+        """Version information."""
         self.code_version = "0.0.4a"
         self.version_date = "20210313"
 
 
 class FigEnlargeRatio:
     def __init__(self):
+        """Save the ratio of figure."""
         self.screen_ratio_check = False
         self.ratio_x = 1.0
         self.ratio_y = 1.0
@@ -75,6 +76,7 @@ RESERVED_WORDS = ["product_name", "value_keys", "non_value_keys"]
 
 class CfgFiles:
     def __init__(self):
+        """Parameters of configuration files."""
         self.plot_file = "load_default.glgp_plot"
         self.ref_file = None
         self.preset_file = "load_default.glgp_preset"
@@ -87,6 +89,7 @@ class CfgFiles:
 
 class PresetCfg:
     def __init__(self):
+        """Init the parameters of preset data."""
         self.data = {}
         self.data['_old_words'] = []
         self.data['_new_words'] = []
@@ -115,10 +118,12 @@ class PresetCfg:
 
 class LogDatabase:
     def __init__(self):
+        """Just initial a void database."""
         self.database = {}
 
 
 def check_data_is_all_value(data):
+    """Decide all members of data are values or not."""
     is_value = True
     data_len = len(data)
 
@@ -280,8 +285,8 @@ def get_win_pos_cfg(index):
         x = base_x + tmp_x
         y = base_y + tmp_y
     else:
-        tmp_x = int(float((1+random.random())*tmp_x*0.5))
-        tmp_y = int(float((1+random.random())*tmp_y*0.5))
+        tmp_x = int(float((1+np.random.rand())*tmp_x*0.5))
+        tmp_y = int(float((1+np.random.rand())*tmp_y*0.5))
         x = base_x + tmp_x
         y = base_y + tmp_y
     ans = "+%s+%s" % (x, y)
@@ -363,16 +368,7 @@ def database_insert_data(database, new_data, data_key, value_flag):
     return database
 
 
-def get_data_from_file(database, preset_cfg):
-    product_name_found_flag = False
-    non_value_keys = []
-    value_keys = []
-
-    root = tk.Tk()
-    screen_dpi = root.winfo_pixels('1i')
-    root.tk.call('tk', 'scaling', 10.0)
-    root.withdraw()
-
+def open_file_and_check_most_key_length(database, value_keys, non_value_keys):
     file_path = filedialog.askopenfilename()
     with open(file_path, "r", encoding='utf-8') as f:
         fr = f.read()
@@ -393,15 +389,7 @@ def get_data_from_file(database, preset_cfg):
                     for tmp_idx in range(2, tmp_len):
                         value += line_data.split('=')[tmp_idx]
 
-                field = field.split('/')
-                if len(field) > 1:
-                    value = value.split('/')
-                else:
-                    value = [str(value)]
-
-                for tmp_idx in range(min(len(field), len(value))):
-                    field[tmp_idx] = field[tmp_idx].strip()
-                    value[tmp_idx] = value[tmp_idx].strip()
+                field, value = separate_filed_and_value(field, value)
 
                 for tmp_idx in range(min(len(field), len(value))):
                     key = field[tmp_idx].strip()
@@ -409,154 +397,82 @@ def get_data_from_file(database, preset_cfg):
                     found = find_word_before_suffix(key_val, "dBm")
                     if found != '':
                         key_val = found.strip()
-                    if key in database:
-                        if key in value_keys:
-                            try:
-                                key_val = float(key_val)
-                            except ValueError:
-                                key_val = -0.01
-                        database[key].append(key_val)
-                    else:
-                        if key_val.lstrip('-+').isnumeric():
-                            value_keys.append(key)
-                            key_val = float(key_val)
-                        else:
-                            non_value_keys.append(key)
-                        database[key] = [key_val]
+                    read_key_and_keyval_to_database(
+                        database, value_keys, non_value_keys, key, key_val, False, 0)
         f.close()
     database["value_keys"] = value_keys
     database["non_value_keys"] = non_value_keys
+    return file_path
 
-    item_nums = []
 
-    for key in database.keys():
-        item_nums.append(len(database[key]))
+def pre_process_data(line_data, preset_cfg):
+    line_data = remove_time_stamp_in_prefix(line_data)
 
-    counts = np.bincount(item_nums)
-    data_len_most = np.argmax(counts)
+    # replace words start
+    for tmp_idx, _old_words in enumerate(preset_cfg.data['_old_words']):
+        _new_words = preset_cfg.data['_new_words'][tmp_idx]
+        line_data = line_data.replace(_old_words, _new_words)
+    # replace words end
 
-    for key in database.keys():
-        if len(database[key]) == data_len_most:
-            data_len_most_pattern = key
-            break
+    # remove pattern start
+    for _, _remove_words in enumerate(preset_cfg.data['_remove_words']):
+        line_data = line_data.replace(_remove_words, '')
+    # remove pattern end
 
-    # Real data
-    database = {}
-    cur_len = 0
-    with open(file_path, "r", encoding='utf-8') as f:
-        fr = f.read()
-        fl = fr.splitlines()
-        database["product_name"] = ""
+    # use one format to segment data start
+    for _, _data_seg in enumerate(preset_cfg.data['_data_seg']):
+        line_data = line_data.replace(_data_seg, '/')
+    # use one format to segment data end
 
-        for line_data in fl:
-            line_data = remove_time_stamp_in_prefix(line_data)
+    # update _key_value_sep start
+    if(len(preset_cfg.data['_key_value_sep']) > 0):
+        _key_value_sep = preset_cfg.data['_key_value_sep'][-1]
+    else:
+        _key_value_sep = '='
+    # update _key_value_sep end
 
-            # replace words start
-            for tmp_idx, _old_words in enumerate(preset_cfg.data['_old_words']):
-                _new_words = preset_cfg.data['_new_words'][tmp_idx]
-                line_data = line_data.replace(_old_words, _new_words)
-            # replace words end
+    line_data = line_data.replace(_key_value_sep, '=')
+    _key_value_sep = '='
 
-            # remove pattern start
-            for _, _remove_words in enumerate(preset_cfg.data['_remove_words']):
-                line_data = line_data.replace(_remove_words, '')
-            # remove pattern end
+    return line_data, _key_value_sep
 
-            # use one format to segment data start
-            for _, _data_seg in enumerate(preset_cfg.data['_data_seg']):
-                line_data = line_data.replace(_data_seg, '/')
-            # use one format to segment data end
 
-            # update _key_value_sep start
-            if(len(preset_cfg.data['_key_value_sep']) > 0):
-                _key_value_sep = preset_cfg.data['_key_value_sep'][-1]
-            else:
-                _key_value_sep = '='
-            # update _key_value_sep end
+def process_data(line_data, _key_value_sep, data_len_most_pattern, database, value_keys, non_value_keys, key, cur_len):
+    if(check_data_line(line_data)):
+        debug_print(line_data)
 
-            line_data = line_data.replace(_key_value_sep, '=')
-            _key_value_sep = '='
+        tmp_len = len(line_data.split(_key_value_sep))
+        field = line_data.split(_key_value_sep)[0]
+        value = line_data.split(_key_value_sep)[1]
 
-            if not product_name_found_flag:
-                found = find_product_name(line_data)
-                if found != "":
-                    product_name_found_flag = True
-                    database["product_name"] = found
+        if tmp_len > 2:
+            for tmp_idx in range(2, tmp_len):
+                value += line_data.split(_key_value_sep)[tmp_idx]
 
-            if(check_data_line(line_data)):
-                debug_print(line_data)
+        field, value = separate_filed_and_value(field, value)
 
-                tmp_len = len(line_data.split(_key_value_sep))
-                field = line_data.split(_key_value_sep)[0]
-                value = line_data.split(_key_value_sep)[1]
+        for tmp_idx in range(min(len(field), len(value))):
+            key = field[tmp_idx].strip()
+            if key == data_len_most_pattern:
+                cur_len += 1
+            key_val = value[tmp_idx].strip()
+            found = find_word_before_suffix(key_val, "dBm")
 
-                if tmp_len > 2:
-                    for tmp_idx in range(2, tmp_len):
-                        value += line_data.split(_key_value_sep)[tmp_idx]
+            if found != '':
+                key_val = found.strip()
+            read_key_and_keyval_to_database(
+                database, value_keys, non_value_keys, key, key_val, True, cur_len)
+    return cur_len
 
-                field = field.split('/')
-                if len(field) > 1:
-                    value = value.split('/')
-                else:
-                    value = [str(value)]
 
-                for tmp_idx in range(min(len(field), len(value))):
-                    field[tmp_idx] = field[tmp_idx].strip()
-                    value[tmp_idx] = value[tmp_idx].strip()
-
-                for tmp_idx in range(min(len(field), len(value))):
-                    key = field[tmp_idx].strip()
-                    if key == data_len_most_pattern:
-                        cur_len += 1
-                    key_val = value[tmp_idx].strip()
-                    found = find_word_before_suffix(key_val, "dBm")
-
-                    if found != '':
-                        key_val = found.strip()
-                    if key in database:
-                        loss_data_len = cur_len - 1 - len(database[key])
-                        if loss_data_len > 0:
-                            for _ in range(loss_data_len):
-                                if key in value_keys:
-                                    key_val_redundancy = -0.01
-                                else:
-                                    key_val_redundancy = "unknown"
-                                database[key].append(key_val_redundancy)
-                        if key in value_keys:
-                            try:
-                                key_val = float(key_val)
-                            except ValueError:
-                                key_val = -0.01
-                        database[key].append(key_val)
-                    else:
-                        if key_val.lstrip('-+').isnumeric():
-                            value_keys.append(key)
-                            key_val = float(key_val)
-                        else:
-                            non_value_keys.append(key)
-                        database[key] = [key_val]
-
-                        loss_data_len = cur_len - 1
-                        if loss_data_len > 0:
-                            for _ in range(loss_data_len):
-                                if key in value_keys:
-                                    key_val_redundancy = -0.01
-                                else:
-                                    key_val_redundancy = "unknown"
-                                database[key].insert(0, key_val_redundancy)
-
-    database["value_keys"] = value_keys
-    database["non_value_keys"] = non_value_keys
-
-    # post precess start
-    # format
+def post_process_format(preset_cfg, database):
+    # format start
     for tmp_idx, _format_new_item in enumerate(preset_cfg.data['_format_new_item']):
         _format_format = preset_cfg.data['_format_format'][tmp_idx]
         _format_item_01 = preset_cfg.data['_format_item_01'][tmp_idx]
         _format_item_02 = preset_cfg.data['_format_item_02'][tmp_idx]
         if _format_item_01 in database.keys() and \
                 _format_item_02 in database.keys() and _format_new_item not in database.keys():
-            is_value = True
             tmp_data_array = []
             for data_index in range(min(len(database[_format_item_01]),
                                         len(database[_format_item_02]))):
@@ -568,7 +484,10 @@ def get_data_from_file(database, preset_cfg):
 
             database = database_insert_data(database, tmp_data_array,
                                             _format_new_item, False)
+    # format end
 
+
+def post_process_alias(preset_cfg, database):
     # alias start
     for tmp_idx, _alias_ori_item in enumerate(preset_cfg.data['_alias_ori_item']):
         _alias_new_item = preset_cfg.data['_alias_new_item'][tmp_idx]
@@ -581,6 +500,45 @@ def get_data_from_file(database, preset_cfg):
                 _alias_new_item, is_value)
     # alias end
 
+
+def post_process_calculation_operation(database, _post_item_01, _post_item_02, data_002_is_const, _post_op_code, _post_new_item):
+    tmp_data_array = []
+    if not data_002_is_const:
+        data_len_tmp = min(len(database[_post_item_01]),
+                           len(database[_post_item_02]))
+    else:
+        data_len_tmp = len(database[_post_item_01])
+
+    for data_index in range(data_len_tmp):
+        data_01 = database[_post_item_01][data_index]
+        if not data_002_is_const:
+            data_02 = database[_post_item_02][data_index]
+        else:
+            data_02 = float(_post_item_02)
+        if _post_op_code == '+':
+            tmp_data = float(data_01) + float(data_02)
+        elif _post_op_code == '-':
+            tmp_data = float(data_01) - float(data_02)
+        elif _post_op_code == '*':
+            tmp_data = float(data_01) * float(data_02)
+        elif _post_op_code == '/':
+            if(float(data_02) != 0):
+                tmp_data = float(data_01) / float(data_02)
+            else:
+                tmp_data = -0.01
+        elif _post_op_code == '%':
+            if(float(data_02) != 0):
+                tmp_data = data_01 % data_02
+            else:
+                tmp_data = -0.01
+        else:
+            tmp_data = -0.01
+        tmp_data_array.append(tmp_data)
+    database = database_insert_data(database, tmp_data_array,
+                                    _post_new_item, True)
+
+
+def post_process_calculation(preset_cfg, database):
     # calculation start
     for tmp_idx, _post_new_item in enumerate(preset_cfg.data['_post_new_item']):
         _post_item_01 = preset_cfg.data['_post_item_01'][tmp_idx]
@@ -601,46 +559,12 @@ def get_data_from_file(database, preset_cfg):
                 else:
                     post_operation_valid = False
             if post_operation_valid:
-                tmp_data_array = []
-                if not data_002_is_const:
-                    data_len_tmp = min(len(database[_post_item_01]),
-                                       len(database[_post_item_02]))
-                else:
-                    data_len_tmp = len(database[_post_item_01])
-
-                for data_index in range(data_len_tmp):
-                    data_01 = database[_post_item_01][data_index]
-                    if not data_002_is_const:
-                        data_02 = database[_post_item_02][data_index]
-                    else:
-                        data_02 = float(_post_item_02)
-                    if _post_op_code == '+':
-                        tmp_data = float(data_01) + float(data_02)
-                    elif _post_op_code == '-':
-                        tmp_data = float(data_01) - float(data_02)
-                    elif _post_op_code == '*':
-                        tmp_data = float(data_01) * float(data_02)
-                    elif _post_op_code == '/':
-                        if(float(data_02) != 0):
-                            tmp_data = float(data_01) / float(data_02)
-                        else:
-                            tmp_data = -0.01
-                    elif _post_op_code == '%':
-                        if(float(data_02) != 0):
-                            tmp_data = data_01 % data_02
-                        else:
-                            tmp_data = -0.01
-                    else:
-                        tmp_data = -0.01
-                    tmp_data_array.append(tmp_data)
-                database = database_insert_data(database, tmp_data_array,
-                                                _post_new_item, True)
-
+                post_process_calculation_operation(
+                    database, _post_item_01, _post_item_02, data_002_is_const, _post_op_code, _post_new_item)
     # calculation end
 
-    database["value_keys"] = list(set(database["value_keys"]))
-    database["non_value_keys"] = list(set(database["non_value_keys"]))
 
+def post_process_trans(preset_cfg, database):
     # trans_data start
     for tmp_idx, _trans_item in enumerate(preset_cfg.data['_trans_item']):
         _trans_op_code = preset_cfg.data['_trans_op_code'][tmp_idx]
@@ -672,6 +596,114 @@ def get_data_from_file(database, preset_cfg):
                 database = database_insert_data(
                     database, data_tmp_array, _trans_item, True)
     # trans_data end
+
+
+def post_process(preset_cfg, database):
+    # post process start
+    post_process_format(preset_cfg, database)
+    post_process_alias(preset_cfg, database)
+    post_process_calculation(preset_cfg, database)
+    database["value_keys"] = list(set(database["value_keys"]))
+    database["non_value_keys"] = list(set(database["non_value_keys"]))
+    post_process_trans(preset_cfg, database)
+    # post process end
+
+
+def check_data_loss(database, value_keys, key, cur_len):
+    loss_data_len = cur_len - 1 - len(database[key])
+    if loss_data_len > 0:
+        for _ in range(loss_data_len):
+            if key in value_keys:
+                key_val_redundancy = -0.01
+            else:
+                key_val_redundancy = "unknown"
+            database[key].append(key_val_redundancy)
+
+
+def separate_filed_and_value(field, value):
+    field = field.split('/')
+    if len(field) > 1:
+        value = value.split('/')
+    else:
+        value = [str(value)]
+
+    for tmp_idx in range(min(len(field), len(value))):
+        field[tmp_idx] = field[tmp_idx].strip()
+        value[tmp_idx] = value[tmp_idx].strip()
+    return field, value
+
+
+def read_key_and_keyval_to_database(database, value_keys, non_value_keys, key, key_val, loss_data_check, cur_len):
+    if key in database:
+        if loss_data_check:
+            check_data_loss(database, value_keys, key, cur_len)
+        if key in value_keys:
+            try:
+                key_val = float(key_val)
+            except ValueError:
+                key_val = -0.01
+        database[key].append(key_val)
+    else:
+        if key_val.lstrip('-+').isnumeric():
+            value_keys.append(key)
+            key_val = float(key_val)
+        else:
+            non_value_keys.append(key)
+        database[key] = [key_val]
+
+        if loss_data_check:
+            check_data_loss(database, value_keys, key, cur_len)
+
+
+def get_data_from_file(database, preset_cfg):
+    product_name_found_flag = False
+    non_value_keys = []
+    value_keys = []
+
+    root = tk.Tk()
+    screen_dpi = root.winfo_pixels('1i')
+    root.tk.call('tk', 'scaling', 10.0)
+    root.withdraw()
+
+    file_path = open_file_and_check_most_key_length(
+        database, value_keys, non_value_keys)
+
+    item_nums = []
+
+    for key in database.keys():
+        item_nums.append(len(database[key]))
+
+    counts = np.bincount(item_nums)
+    data_len_most = np.argmax(counts)
+
+    for key in database.keys():
+        if len(database[key]) == data_len_most:
+            data_len_most_pattern = key
+            break
+
+    # Real data
+    database = {}
+    cur_len = 0
+    with open(file_path, "r", encoding='utf-8') as f:
+        fr = f.read()
+        fl = fr.splitlines()
+        database["product_name"] = ""
+
+        for line_data in fl:
+            line_data, _key_value_sep = pre_process_data(line_data, preset_cfg)
+
+            if not product_name_found_flag:
+                found = find_product_name(line_data)
+                if found != "":
+                    product_name_found_flag = True
+                    database["product_name"] = found
+            cur_len = process_data(line_data, _key_value_sep, data_len_most_pattern,
+                                   database, value_keys, non_value_keys, key, cur_len)
+
+    database["value_keys"] = value_keys
+    database["non_value_keys"] = non_value_keys
+
+    post_process(preset_cfg, database)
 
     return database, screen_dpi, file_path
 
@@ -708,7 +740,7 @@ def make_patch_spines_invisible(ax):
 
 
 def set_size(w, h, ax=None):
-    """ w, h: width, height in inches """
+    """Set figure width/height in inches."""
     if not ax:
         ax = plt.gca()
     left = ax.figure.subplotpars.left
@@ -722,6 +754,7 @@ def set_size(w, h, ax=None):
 
 class LogFigure:
     def __init__(self):
+        """Init figure all data."""
         self.cur_data_count = 0
         self.time_step_sec = 1
         self.y_range_max = 0
@@ -737,7 +770,7 @@ class LogFigure:
         self.product_name = []
         self.title = "unknown"
         self.share_y_axis_times = 0
-        self.indepent_y_axis_num = 0  # all data
+        self.independent_y_axis_num = 0  # all data
         self.share_start = False
         self.last_host = False
         self.last_para = None
@@ -755,6 +788,7 @@ class LogFigure:
         self.code_version = '0.0.0'
         self.version_date = '20999999'
         self.save_data = False
+        self.host_flag = False
 
     def set_show_max(self, flag):
         self.show_max = flag
@@ -851,17 +885,17 @@ class LogFigure:
                     debug_print("SetProcessDPIAware errorCode = %d" %
                                 (errorCode))
 
-            monitors = EnumDisplayMonitors()
+            # monitors = EnumDisplayMonitors()
 
-            if (len(monitors) == 1):
-                monitor = monitors[0]
-                if win8_higher_os_flag:
-                    ctypes.windll.shcore.GetDpiForMonitor(monitor[0].handle, 0,
-                                                          ctypes.byref(dpiX),
-                                                          ctypes.byref(dpiY))
+            # if (len(monitors) == 1):
+            #     monitor = monitors[0]
+            #     if win8_higher_os_flag:
+            #         ctypes.windll.shcore.GetDpiForMonitor(monitor[0].handle, 0,
+            #                                               ctypes.byref(dpiX),
+            #                                               ctypes.byref(dpiY))
 
-                    debug_print(f"Monitor (hmonitor: {monitor[0]}) = dpiX:\
-                                {dpiX.value}, dpiY: {dpiY.value}")
+            #         debug_print(f"Monitor (hmonitor: {monitor[0]}) = dpiX:\
+            #                     {dpiX.value}, dpiY: {dpiY.value}")
 
             if not self.screen_ratio_check:
                 fig_ratio.ratio_x = float(
@@ -884,6 +918,88 @@ class LogFigure:
 
         set_size(x_size_inch, y_size_inch, self.host)
 
+    def set_share_y_axis_of_gen_figure(self):
+        host_flag = (self.cur_data_count == 0)
+        self.host_flag = host_flag
+
+        if host_flag:
+            para = self.host
+            if self.share_y_axis_times > 1:  # before last data
+                self.share_start = True
+        else:
+            if self.share_start:
+                para = self.last_para
+                if self.share_y_axis_times == 1:  # last data
+                    self.share_start = False
+            else:
+                para = self.host.twinx()
+                if self.share_y_axis_times > 1:  # before last data
+                    self.share_start = True
+
+        self.last_para = para
+
+    def set_axis_settings_of_gen_figure(self, data_for_plot, x_data_for_plot, para, text_flag, cur_color, cur_zorder, labels, cur_annotate_count):
+
+        if self.show_max:
+            max_val_index = list(data_for_plot).index(max(data_for_plot))
+            max_x_val = x_data_for_plot[max_val_index]
+            max_y_val = data_for_plot[max_val_index]
+            para.plot([max_x_val], [max_y_val], "^"	, color=cur_color,
+                      markersize=8, zorder=cur_zorder)
+
+        if self.show_min:
+            min_val_index = list(data_for_plot).index(min(data_for_plot))
+            min_x_val = x_data_for_plot[min_val_index]
+            min_y_val = data_for_plot[min_val_index]
+            para.plot([min_x_val], [min_y_val], "v", color=cur_color,
+                      markersize=8, zorder=cur_zorder)
+
+        if text_flag:
+            y_max = len(labels) - 1
+            y_min = 0
+        else:
+            y_max = float(max(data_for_plot))
+            y_min = float(min(data_for_plot))
+        y_range = y_max - y_min
+
+        ylim_ext = y_range * 0.03
+
+        if self.y_range_max == 0:
+            self.y_range_max = y_range
+
+        self.y_cur_max = y_max
+        self.y_cur_min = y_min
+        self.ylim_ext = ylim_ext
+
+        if text_flag:  # hide axis and add annotate
+            para.get_yaxis().set_visible(False)
+            for i, item in enumerate(labels):
+                if i < (len(labels)-1):
+                    tmp_text_y_pos = i+(ylim_ext*cur_annotate_count)
+                    plt.annotate(item, (-1, tmp_text_y_pos),
+                                 color=cur_color, zorder=cur_zorder+1)
+                else:
+                    tmp_text_y_pos = i-(ylim_ext*cur_annotate_count)
+                    plt.annotate(item, (-1, tmp_text_y_pos),
+                                 color=cur_color, zorder=cur_zorder+1)
+            self.cur_annotate_count += 1
+        else:
+            if self.host_flag and self.share_y_axis_times == 1:  # last data
+                para.get_yaxis().set_visible(False)
+
+            if self.share_y_axis_times > 0:
+                self.share_y_axis_times -= 1
+
+            if self.independent_y_axis_num == 0:
+                para.yaxis.tick_left()
+            elif self.independent_y_axis_num == 1:
+                para.yaxis.tick_right()
+            if self.share_y_axis_times == 0:
+                self.independent_y_axis_num += 1
+            self.cur_numeric_count += 1
+        self.numeric_idx_fig_num_array.append(self.share_y_axis_times)
+        self.cur_data_count += 1
+
     def gen_figure(self, database, new_data_key):
         if new_data_key not in database:
             return
@@ -903,23 +1019,8 @@ class LogFigure:
             self.share_y_axis_times = 0
             debug_print("share cnt reset!!! key %s" % (new_data_key))
 
-        host_flag = (self.cur_data_count == 0)
-
-        if host_flag:
-            para = self.host
-            if self.share_y_axis_times > 1:  # before last data
-                self.share_start = True
-        else:
-            if self.share_start:
-                para = self.last_para
-                if self.share_y_axis_times == 1:  # last data
-                    self.share_start = False
-            else:
-                para = self.host.twinx()
-                if self.share_y_axis_times > 1:  # before last data
-                    self.share_start = True
-
-        self.last_para = para
+        self.set_share_y_axis_of_gen_figure()
+        para = self.last_para
 
         self.parameters.append(para)
         self.text_flag.append(text_flag)
@@ -967,66 +1068,8 @@ class LogFigure:
                              alpha=cur_alpha, marker=cur_marker)
 
         self.pictures.append(tmp_pic)
-
-        if self.show_max:
-            max_val_index = list(data_for_plot).index(max(data_for_plot))
-            max_x_val = x_data_for_plot[max_val_index]
-            max_y_val = data_for_plot[max_val_index]
-            para.plot([max_x_val], [max_y_val], "^"	, color=cur_color,
-                      markersize=8, zorder=cur_zorder)
-
-        if self.show_min:
-            min_val_index = list(data_for_plot).index(min(data_for_plot))
-            min_x_val = x_data_for_plot[min_val_index]
-            min_y_val = data_for_plot[min_val_index]
-            para.plot([min_x_val], [min_y_val], "v", color=cur_color,
-                      markersize=8, zorder=cur_zorder)
-
-        if text_flag:
-            y_max = len(labels) - 1
-            y_min = 0
-        else:
-            y_max = float(max(data_for_plot))
-            y_min = float(min(data_for_plot))
-        y_range = y_max - y_min
-
-        ylim_ext = y_range * 0.03
-
-        if self.y_range_max == 0:
-            self.y_range_max = y_range
-
-        self.y_cur_max = y_max
-        self.y_cur_min = y_min
-        self.ylim_ext = ylim_ext
-
-        if text_flag:  # hide axis and add annotate
-            para.get_yaxis().set_visible(False)
-            for i, item in enumerate(labels):
-                if i < (len(labels)-1):
-                    tmp_text_y_pos = i+(ylim_ext*cur_annotate_count)
-                    plt.annotate(item, (-1, tmp_text_y_pos),
-                                 color=cur_color, zorder=cur_zorder+1)
-                else:
-                    tmp_text_y_pos = i-(ylim_ext*cur_annotate_count)
-                    plt.annotate(item, (-1, tmp_text_y_pos),
-                                 color=cur_color, zorder=cur_zorder+1)
-            self.cur_annotate_count += 1
-        else:
-            if host_flag and self.share_y_axis_times == 1:  # last data
-                para.get_yaxis().set_visible(False)
-
-            if self.share_y_axis_times > 0:
-                self.share_y_axis_times -= 1
-
-            if self.indepent_y_axis_num == 0:
-                para.yaxis.tick_left()
-            elif self.indepent_y_axis_num == 1:
-                para.yaxis.tick_right()
-            if self.share_y_axis_times == 0:
-                self.indepent_y_axis_num += 1
-            self.cur_numeric_count += 1
-        self.numeric_idx_fig_num_array.append(self.share_y_axis_times)
-        self.cur_data_count += 1
+        self.set_axis_settings_of_gen_figure(
+            data_for_plot, x_data_for_plot, para, text_flag, cur_color, cur_zorder, labels, cur_annotate_count)
 
     def plot_figure(self):
         lines = self.pictures
@@ -1092,7 +1135,7 @@ def init_cur_fig(cur_fig, version_info, screen_dpi, fig_ratio):
 
 def fig_operation(fig, operation_item, avg_flag):
     # def fig_operation(fig, operation_item):
-    #avg_flag_final = False
+    # avg_flag_final = False
     if operation_item.isnumeric():
         fig.set_share_y_axis_times(float(operation_item))
     elif operation_item == "avg":
@@ -1112,6 +1155,37 @@ def fig_operation(fig, operation_item, avg_flag):
     return avg_flag
 
 
+def first_plot_of_fig(last_fig, new_fig_title, first_fig_flag, save_file_new):
+    first_fig_flag = False
+    last_fig.set_title(new_fig_title)
+    save_file_new = True
+    return first_fig_flag, save_file_new
+
+
+def second_and_others_plot_of_fig(fig, new_fig_title, cur_fig_num,  version_info, screen_dpi, fig_ratio):
+    fig[-1].set_total_fig_num(cur_fig_num)
+    cur_fig_num = fig[-1].plot_figure()
+    fig.append(LogFigure())  # first figure
+    init_cur_fig(fig[-1], version_info, screen_dpi, fig_ratio)
+    fig[-1].set_title(new_fig_title)
+    return cur_fig_num
+
+
+def new_fig_for_plot_figs(fig, new_fig_title, preset_cfg, first_fig_flag, save_file_new, cur_fig_num, version_info, screen_dpi, fig_ratio):
+    if first_fig_flag:
+        first_fig_flag, save_file_new = first_plot_of_fig(
+            fig[-1], new_fig_title, cur_fig_num, save_file_new)
+    else:
+        cur_fig_num = second_and_others_plot_of_fig(
+            fig, new_fig_title, cur_fig_num,  version_info, screen_dpi, fig_ratio)
+
+    if(len(preset_cfg.data['_time_step_sec']) > 0):
+        step_sec = preset_cfg.data['_time_step_sec'][-1]
+        if(check_data_is_all_value(step_sec)):
+            fig[-1].set_time_step_sec(float(step_sec))
+    return first_fig_flag, save_file_new, cur_fig_num
+
+
 def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi, fig, fig_ratio):
     first_fig_flag = True
     avg_flag = False
@@ -1129,21 +1203,9 @@ def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi
                                                          '\\<', "\\>")
 
             if new_fig_title != "":  # new figure
-                if first_fig_flag:
-                    first_fig_flag = False
-                    fig[-1].set_title(new_fig_title)
-                    save_data_with_new_file = True
-                else:
-                    fig[-1].set_total_fig_num(cur_fig_num)
-                    cur_fig_num = fig[-1].plot_figure()
-                    fig.append(LogFigure())  # first figure
-                    init_cur_fig(fig[-1], version_info, screen_dpi, fig_ratio)
-                    fig[-1].set_title(new_fig_title)
+                first_fig_flag, save_data_with_new_file, cur_fig_num = new_fig_for_plot_figs(fig, new_fig_title, preset_cfg, first_fig_flag,
+                                                                                             save_data_with_new_file, cur_fig_num, version_info, screen_dpi, fig_ratio)
 
-                if(len(preset_cfg.data['_time_step_sec']) > 0):
-                    step_sec = preset_cfg.data['_time_step_sec'][-1]
-                    if(check_data_is_all_value(step_sec)):
-                        fig[-1].set_time_step_sec(float(step_sec))
             elif operation_item != "":  # share y axis
                 avg_flag = fig_operation(fig[-1], operation_item, avg_flag)
             else:  # data only
