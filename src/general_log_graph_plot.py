@@ -1,6 +1,6 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''Version history
+'''[Version history]
 
 To generatelog visual graph
 # Version|Date       |Author     |Note                                  |
@@ -44,10 +44,7 @@ import shutil
 
 class CodeVersionInfo:
     def __init__(self):
-        """
-        __init__ [version information]
-
-        """
+        """__init__ [version information]"""
 
         self.code_version = "0.0.4a"
         self.version_date = "20210313"
@@ -55,6 +52,7 @@ class CodeVersionInfo:
 
 class FigEnlargeRatio:
     def __init__(self):
+        """__init__ [save the ratio of figure]"""
         self.screen_ratio_check = False
         self.ratio_x = 1.0
         self.ratio_y = 1.0
