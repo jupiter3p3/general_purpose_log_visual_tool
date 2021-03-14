@@ -911,6 +911,68 @@ class LogFigure:
 
         self.last_para = para
 
+    def set_axis_settings_of_gen_figure(self, data_for_plot, x_data_for_plot, para, text_flag, cur_color, cur_zorder, labels, cur_annotate_count):
+
+        if self.show_max:
+            max_val_index = list(data_for_plot).index(max(data_for_plot))
+            max_x_val = x_data_for_plot[max_val_index]
+            max_y_val = data_for_plot[max_val_index]
+            para.plot([max_x_val], [max_y_val], "^"	, color=cur_color,
+                      markersize=8, zorder=cur_zorder)
+
+        if self.show_min:
+            min_val_index = list(data_for_plot).index(min(data_for_plot))
+            min_x_val = x_data_for_plot[min_val_index]
+            min_y_val = data_for_plot[min_val_index]
+            para.plot([min_x_val], [min_y_val], "v", color=cur_color,
+                      markersize=8, zorder=cur_zorder)
+
+        if text_flag:
+            y_max = len(labels) - 1
+            y_min = 0
+        else:
+            y_max = float(max(data_for_plot))
+            y_min = float(min(data_for_plot))
+        y_range = y_max - y_min
+
+        ylim_ext = y_range * 0.03
+
+        if self.y_range_max == 0:
+            self.y_range_max = y_range
+
+        self.y_cur_max = y_max
+        self.y_cur_min = y_min
+        self.ylim_ext = ylim_ext
+
+        if text_flag:  # hide axis and add annotate
+            para.get_yaxis().set_visible(False)
+            for i, item in enumerate(labels):
+                if i < (len(labels)-1):
+                    tmp_text_y_pos = i+(ylim_ext*cur_annotate_count)
+                    plt.annotate(item, (-1, tmp_text_y_pos),
+                                 color=cur_color, zorder=cur_zorder+1)
+                else:
+                    tmp_text_y_pos = i-(ylim_ext*cur_annotate_count)
+                    plt.annotate(item, (-1, tmp_text_y_pos),
+                                 color=cur_color, zorder=cur_zorder+1)
+            self.cur_annotate_count += 1
+        else:
+            if self.host_flag and self.share_y_axis_times == 1:  # last data
+                para.get_yaxis().set_visible(False)
+
+            if self.share_y_axis_times > 0:
+                self.share_y_axis_times -= 1
+
+            if self.indepent_y_axis_num == 0:
+                para.yaxis.tick_left()
+            elif self.indepent_y_axis_num == 1:
+                para.yaxis.tick_right()
+            if self.share_y_axis_times == 0:
+                self.indepent_y_axis_num += 1
+            self.cur_numeric_count += 1
+        self.numeric_idx_fig_num_array.append(self.share_y_axis_times)
+        self.cur_data_count += 1
+
     def gen_figure(self, database, new_data_key):
         if new_data_key not in database:
             return
@@ -979,66 +1041,8 @@ class LogFigure:
                              alpha=cur_alpha, marker=cur_marker)
 
         self.pictures.append(tmp_pic)
-
-        if self.show_max:
-            max_val_index = list(data_for_plot).index(max(data_for_plot))
-            max_x_val = x_data_for_plot[max_val_index]
-            max_y_val = data_for_plot[max_val_index]
-            para.plot([max_x_val], [max_y_val], "^"	, color=cur_color,
-                      markersize=8, zorder=cur_zorder)
-
-        if self.show_min:
-            min_val_index = list(data_for_plot).index(min(data_for_plot))
-            min_x_val = x_data_for_plot[min_val_index]
-            min_y_val = data_for_plot[min_val_index]
-            para.plot([min_x_val], [min_y_val], "v", color=cur_color,
-                      markersize=8, zorder=cur_zorder)
-
-        if text_flag:
-            y_max = len(labels) - 1
-            y_min = 0
-        else:
-            y_max = float(max(data_for_plot))
-            y_min = float(min(data_for_plot))
-        y_range = y_max - y_min
-
-        ylim_ext = y_range * 0.03
-
-        if self.y_range_max == 0:
-            self.y_range_max = y_range
-
-        self.y_cur_max = y_max
-        self.y_cur_min = y_min
-        self.ylim_ext = ylim_ext
-
-        if text_flag:  # hide axis and add annotate
-            para.get_yaxis().set_visible(False)
-            for i, item in enumerate(labels):
-                if i < (len(labels)-1):
-                    tmp_text_y_pos = i+(ylim_ext*cur_annotate_count)
-                    plt.annotate(item, (-1, tmp_text_y_pos),
-                                 color=cur_color, zorder=cur_zorder+1)
-                else:
-                    tmp_text_y_pos = i-(ylim_ext*cur_annotate_count)
-                    plt.annotate(item, (-1, tmp_text_y_pos),
-                                 color=cur_color, zorder=cur_zorder+1)
-            self.cur_annotate_count += 1
-        else:
-            if self.host_flag and self.share_y_axis_times == 1:  # last data
-                para.get_yaxis().set_visible(False)
-
-            if self.share_y_axis_times > 0:
-                self.share_y_axis_times -= 1
-
-            if self.indepent_y_axis_num == 0:
-                para.yaxis.tick_left()
-            elif self.indepent_y_axis_num == 1:
-                para.yaxis.tick_right()
-            if self.share_y_axis_times == 0:
-                self.indepent_y_axis_num += 1
-            self.cur_numeric_count += 1
-        self.numeric_idx_fig_num_array.append(self.share_y_axis_times)
-        self.cur_data_count += 1
+        self.set_axis_settings_of_gen_figure(
+            data_for_plot, x_data_for_plot, para, text_flag, cur_color, cur_zorder, labels, cur_annotate_count)
 
     def plot_figure(self):
         lines = self.pictures
