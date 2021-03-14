@@ -436,33 +436,6 @@ def pre_process_data(line_data, preset_cfg):
 
     return line_data, _key_value_sep
 
-'''
-            if(check_data_line(line_data)):
-                        debug_print(line_data)
-
-                tmp_len = len(line_data.split(_key_value_sep))
-                field = line_data.split(_key_value_sep)[0]
-                value = line_data.split(_key_value_sep)[1]
-
-                if tmp_len > 2:
-                    for tmp_idx in range(2, tmp_len):
-                        value += line_data.split(_key_value_sep)[tmp_idx]
-
-                field, value = separate_filed_and_value(field, value)
-
-                for tmp_idx in range(min(len(field), len(value))):
-                    key = field[tmp_idx].strip()
-                    if key == data_len_most_pattern:
-                        cur_len += 1
-                    key_val = value[tmp_idx].strip()
-                    found = find_word_before_suffix(key_val, "dBm")
-
-                    if found != '':
-                        key_val = found.strip()
-                    read_key_and_keyval_to_database(
-                        database, value_keys, non_value_keys, key, key_val, True, cur_len)
-'''
-
 
 def process_data(line_data, _key_value_sep, data_len_most_pattern, database, value_keys, non_value_keys, key, cur_len):
     if(check_data_line(line_data)):
@@ -491,6 +464,96 @@ def process_data(line_data, _key_value_sep, data_len_most_pattern, database, val
                 database, value_keys, non_value_keys, key, key_val, True, cur_len)
     return cur_len
 
+def post_process(preset_cfg, database):
+    # post process start
+    # format
+    for tmp_idx, _format_new_item in enumerate(preset_cfg.data['_format_new_item']):
+        _format_format = preset_cfg.data['_format_format'][tmp_idx]
+        _format_item_01 = preset_cfg.data['_format_item_01'][tmp_idx]
+        _format_item_02 = preset_cfg.data['_format_item_02'][tmp_idx]
+        if _format_item_01 in database.keys() and \
+                _format_item_02 in database.keys() and _format_new_item not in database.keys():
+            is_value = True
+            tmp_data_array = []
+            for data_index in range(min(len(database[_format_item_01]),
+                                        len(database[_format_item_02]))):
+                data_01 = database[_format_item_01][data_index]
+                data_02 = database[_format_item_02][data_index]
+
+                tmp_data = _format_format % (data_01, data_02)
+                tmp_data_array.append(tmp_data)
+
+            database = database_insert_data(database, tmp_data_array,
+                                            _format_new_item, False)
+
+    # alias start
+    for tmp_idx, _alias_ori_item in enumerate(preset_cfg.data['_alias_ori_item']):
+        _alias_new_item = preset_cfg.data['_alias_new_item'][tmp_idx]
+
+        if _alias_ori_item in database.keys() and _alias_new_item not in database.keys():
+            is_value = check_data_is_all_value(database[_alias_ori_item])
+
+            database = database_insert_data(
+                database, database[_alias_ori_item],
+                _alias_new_item, is_value)
+    # alias end
+
+    # calculation start
+    for tmp_idx, _post_new_item in enumerate(preset_cfg.data['_post_new_item']):
+        _post_item_01 = preset_cfg.data['_post_item_01'][tmp_idx]
+        _post_op_code = preset_cfg.data['_post_op_code'][tmp_idx]
+        _post_item_02 = preset_cfg.data['_post_item_02'][tmp_idx]
+        data_002_is_const = False
+        if (_post_item_01 in database.keys() and _post_item_02 in
+                database.keys()) or _post_item_01 in database.keys():
+            post_operation_valid = True
+            if _post_item_02 in database.keys():
+                post_operation_valid = bool(check_data_is_all_value(database[_post_item_01]) and
+                                            check_data_is_all_value(database[_post_item_02]))
+            else:
+                if check_data_is_all_value(database[_post_item_01]) and \
+                        check_data_is_all_value(_post_item_02):
+                    post_operation_valid = True
+                    data_002_is_const = True
+                else:
+                    post_operation_valid = False
+            if post_operation_valid:
+                tmp_data_array = []
+                if not data_002_is_const:
+                    data_len_tmp = min(len(database[_post_item_01]),
+                                       len(database[_post_item_02]))
+                else:
+                    data_len_tmp = len(database[_post_item_01])
+
+                for data_index in range(data_len_tmp):
+                    data_01 = database[_post_item_01][data_index]
+                    if not data_002_is_const:
+                        data_02 = database[_post_item_02][data_index]
+                    else:
+                        data_02 = float(_post_item_02)
+                    if _post_op_code == '+':
+                        tmp_data = float(data_01) + float(data_02)
+                    elif _post_op_code == '-':
+                        tmp_data = float(data_01) - float(data_02)
+                    elif _post_op_code == '*':
+                        tmp_data = float(data_01) * float(data_02)
+                    elif _post_op_code == '/':
+                        if(float(data_02) != 0):
+                            tmp_data = float(data_01) / float(data_02)
+                        else:
+                            tmp_data = -0.01
+                    elif _post_op_code == '%':
+                        if(float(data_02) != 0):
+                            tmp_data = data_01 % data_02
+                        else:
+                            tmp_data = -0.01
+                    else:
+                        tmp_data = -0.01
+                    tmp_data_array.append(tmp_data)
+                database = database_insert_data(database, tmp_data_array,
+                                                _post_new_item, True)
+
+    # calculation end
 
 def check_data_loss(database, value_keys, key, cur_len):
     loss_data_len = cur_len - 1 - len(database[key])
@@ -586,95 +649,7 @@ def get_data_from_file(database, preset_cfg):
     database["value_keys"] = value_keys
     database["non_value_keys"] = non_value_keys
 
-    # post precess start
-    # format
-    for tmp_idx, _format_new_item in enumerate(preset_cfg.data['_format_new_item']):
-        _format_format = preset_cfg.data['_format_format'][tmp_idx]
-        _format_item_01 = preset_cfg.data['_format_item_01'][tmp_idx]
-        _format_item_02 = preset_cfg.data['_format_item_02'][tmp_idx]
-        if _format_item_01 in database.keys() and \
-                _format_item_02 in database.keys() and _format_new_item not in database.keys():
-            is_value = True
-            tmp_data_array = []
-            for data_index in range(min(len(database[_format_item_01]),
-                                        len(database[_format_item_02]))):
-                data_01 = database[_format_item_01][data_index]
-                data_02 = database[_format_item_02][data_index]
-
-                tmp_data = _format_format % (data_01, data_02)
-                tmp_data_array.append(tmp_data)
-
-            database = database_insert_data(database, tmp_data_array,
-                                            _format_new_item, False)
-
-    # alias start
-    for tmp_idx, _alias_ori_item in enumerate(preset_cfg.data['_alias_ori_item']):
-        _alias_new_item = preset_cfg.data['_alias_new_item'][tmp_idx]
-
-        if _alias_ori_item in database.keys() and _alias_new_item not in database.keys():
-            is_value = check_data_is_all_value(database[_alias_ori_item])
-
-            database = database_insert_data(
-                database, database[_alias_ori_item],
-                _alias_new_item, is_value)
-    # alias end
-
-    # calculation start
-    for tmp_idx, _post_new_item in enumerate(preset_cfg.data['_post_new_item']):
-        _post_item_01 = preset_cfg.data['_post_item_01'][tmp_idx]
-        _post_op_code = preset_cfg.data['_post_op_code'][tmp_idx]
-        _post_item_02 = preset_cfg.data['_post_item_02'][tmp_idx]
-        data_002_is_const = False
-        if (_post_item_01 in database.keys() and _post_item_02 in
-                database.keys()) or _post_item_01 in database.keys():
-            post_operation_valid = True
-            if _post_item_02 in database.keys():
-                post_operation_valid = bool(check_data_is_all_value(database[_post_item_01]) and
-                                            check_data_is_all_value(database[_post_item_02]))
-            else:
-                if check_data_is_all_value(database[_post_item_01]) and \
-                        check_data_is_all_value(_post_item_02):
-                    post_operation_valid = True
-                    data_002_is_const = True
-                else:
-                    post_operation_valid = False
-            if post_operation_valid:
-                tmp_data_array = []
-                if not data_002_is_const:
-                    data_len_tmp = min(len(database[_post_item_01]),
-                                       len(database[_post_item_02]))
-                else:
-                    data_len_tmp = len(database[_post_item_01])
-
-                for data_index in range(data_len_tmp):
-                    data_01 = database[_post_item_01][data_index]
-                    if not data_002_is_const:
-                        data_02 = database[_post_item_02][data_index]
-                    else:
-                        data_02 = float(_post_item_02)
-                    if _post_op_code == '+':
-                        tmp_data = float(data_01) + float(data_02)
-                    elif _post_op_code == '-':
-                        tmp_data = float(data_01) - float(data_02)
-                    elif _post_op_code == '*':
-                        tmp_data = float(data_01) * float(data_02)
-                    elif _post_op_code == '/':
-                        if(float(data_02) != 0):
-                            tmp_data = float(data_01) / float(data_02)
-                        else:
-                            tmp_data = -0.01
-                    elif _post_op_code == '%':
-                        if(float(data_02) != 0):
-                            tmp_data = data_01 % data_02
-                        else:
-                            tmp_data = -0.01
-                    else:
-                        tmp_data = -0.01
-                    tmp_data_array.append(tmp_data)
-                database = database_insert_data(database, tmp_data_array,
-                                                _post_new_item, True)
-
-    # calculation end
+    post_process(preset_cfg, database)
 
     database["value_keys"] = list(set(database["value_keys"]))
     database["non_value_keys"] = list(set(database["non_value_keys"]))
