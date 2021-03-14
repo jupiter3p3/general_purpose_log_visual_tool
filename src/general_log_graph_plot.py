@@ -473,7 +473,6 @@ def post_process_format(preset_cfg, database):
         _format_item_02 = preset_cfg.data['_format_item_02'][tmp_idx]
         if _format_item_01 in database.keys() and \
                 _format_item_02 in database.keys() and _format_new_item not in database.keys():
-            is_value = True
             tmp_data_array = []
             for data_index in range(min(len(database[_format_item_01]),
                                         len(database[_format_item_02]))):
@@ -502,6 +501,43 @@ def post_process_alias(preset_cfg, database):
     # alias end
 
 
+def post_process_calculation_operation(database, _post_item_01, _post_item_02, data_002_is_const, _post_op_code, _post_new_item):
+    tmp_data_array = []
+    if not data_002_is_const:
+        data_len_tmp = min(len(database[_post_item_01]),
+                           len(database[_post_item_02]))
+    else:
+        data_len_tmp = len(database[_post_item_01])
+
+    for data_index in range(data_len_tmp):
+        data_01 = database[_post_item_01][data_index]
+        if not data_002_is_const:
+            data_02 = database[_post_item_02][data_index]
+        else:
+            data_02 = float(_post_item_02)
+        if _post_op_code == '+':
+            tmp_data = float(data_01) + float(data_02)
+        elif _post_op_code == '-':
+            tmp_data = float(data_01) - float(data_02)
+        elif _post_op_code == '*':
+            tmp_data = float(data_01) * float(data_02)
+        elif _post_op_code == '/':
+            if(float(data_02) != 0):
+                tmp_data = float(data_01) / float(data_02)
+            else:
+                tmp_data = -0.01
+        elif _post_op_code == '%':
+            if(float(data_02) != 0):
+                tmp_data = data_01 % data_02
+            else:
+                tmp_data = -0.01
+        else:
+            tmp_data = -0.01
+        tmp_data_array.append(tmp_data)
+    database = database_insert_data(database, tmp_data_array,
+                                    _post_new_item, True)
+
+
 def post_process_calculation(preset_cfg, database):
     # calculation start
     for tmp_idx, _post_new_item in enumerate(preset_cfg.data['_post_new_item']):
@@ -523,41 +559,8 @@ def post_process_calculation(preset_cfg, database):
                 else:
                     post_operation_valid = False
             if post_operation_valid:
-                tmp_data_array = []
-                if not data_002_is_const:
-                    data_len_tmp = min(len(database[_post_item_01]),
-                                       len(database[_post_item_02]))
-                else:
-                    data_len_tmp = len(database[_post_item_01])
-
-                for data_index in range(data_len_tmp):
-                    data_01 = database[_post_item_01][data_index]
-                    if not data_002_is_const:
-                        data_02 = database[_post_item_02][data_index]
-                    else:
-                        data_02 = float(_post_item_02)
-                    if _post_op_code == '+':
-                        tmp_data = float(data_01) + float(data_02)
-                    elif _post_op_code == '-':
-                        tmp_data = float(data_01) - float(data_02)
-                    elif _post_op_code == '*':
-                        tmp_data = float(data_01) * float(data_02)
-                    elif _post_op_code == '/':
-                        if(float(data_02) != 0):
-                            tmp_data = float(data_01) / float(data_02)
-                        else:
-                            tmp_data = -0.01
-                    elif _post_op_code == '%':
-                        if(float(data_02) != 0):
-                            tmp_data = data_01 % data_02
-                        else:
-                            tmp_data = -0.01
-                    else:
-                        tmp_data = -0.01
-                    tmp_data_array.append(tmp_data)
-                database = database_insert_data(database, tmp_data_array,
-                                                _post_new_item, True)
-
+                post_process_calculation_operation(
+                    database, _post_item_01, _post_item_02, data_002_is_const, _post_op_code, _post_new_item)
     # calculation end
 
 
