@@ -123,15 +123,7 @@ class LogDatabase:
 
 
 def check_data_is_all_value(data):
-    """
-    For decide data type.
-
-    Args:
-        data ([any]): [want to confirm data]
-
-    Returns:
-        [bool]: [all members of data are values]
-    """
+    """Decide all members of data are values or not."""
     is_value = True
     data_len = len(data)
 
