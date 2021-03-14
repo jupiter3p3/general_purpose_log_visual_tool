@@ -1,7 +1,6 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
-[Version history]
+'''[Version history]
 
 To generatelog visual graph
 # Version|Date       |Author     |Note                                  |
@@ -79,8 +78,7 @@ RESERVED_WORDS = ["product_name", "value_keys", "non_value_keys"]
 
 class CfgFiles:
     def __init__(self):
-        """
-        __init__ [configure files]
+        """configure files.
 
         [parameters of configuration files]
         """
