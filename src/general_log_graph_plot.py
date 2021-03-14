@@ -1,6 +1,6 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-''' Version history
+'''Version history
 
 To generatelog visual graph
 # Version|Date       |Author     |Note                                  |
