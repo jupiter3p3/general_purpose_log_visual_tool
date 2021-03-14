@@ -43,8 +43,8 @@ import shutil
 class CodeVersionInfo:
     def __init__(self):
         """Version information."""
-        self.code_version = "0.0.4a"
-        self.version_date = "20210313"
+        self.code_version = "0.0.4b"
+        self.version_date = "20210315"
 
 
 class FigEnlargeRatio:
