@@ -743,7 +743,7 @@ class LogFigure:
         self.product_name = []
         self.title = "unknown"
         self.share_y_axis_times = 0
-        self.indepent_y_axis_num = 0  # all data
+        self.independent_y_axis_num = 0  # all data
         self.share_start = False
         self.last_host = False
         self.last_para = None
@@ -963,12 +963,12 @@ class LogFigure:
             if self.share_y_axis_times > 0:
                 self.share_y_axis_times -= 1
 
-            if self.indepent_y_axis_num == 0:
+            if self.independent_y_axis_num == 0:
                 para.yaxis.tick_left()
-            elif self.indepent_y_axis_num == 1:
+            elif self.independent_y_axis_num == 1:
                 para.yaxis.tick_right()
             if self.share_y_axis_times == 0:
-                self.indepent_y_axis_num += 1
+                self.independent_y_axis_num += 1
             self.cur_numeric_count += 1
         self.numeric_idx_fig_num_array.append(self.share_y_axis_times)
         self.cur_data_count += 1
