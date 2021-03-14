@@ -79,7 +79,7 @@ class CfgFiles:
         """
         configure files.
 
-        [parameters of configuration files]
+        parameters of configuration files
         """
         self.plot_file = "load_default.glgp_plot"
         self.ref_file = None
@@ -122,11 +122,13 @@ class PresetCfg:
 
 class LogDatabase:
     def __init__(self):
+        """Just initial a void database."""
         self.database = {}
 
 
 def check_data_is_all_value(data):
-    """[For decide data type]
+    """
+    For decide data type.
 
     Args:
         data ([any]): [want to confirm data]
