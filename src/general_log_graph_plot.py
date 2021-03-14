@@ -76,7 +76,7 @@ RESERVED_WORDS = ["product_name", "value_keys", "non_value_keys"]
 
 class CfgFiles:
     def __init__(self):
-        """parameters of configuration files."""
+        """Parameters of configuration files."""
         self.plot_file = "load_default.glgp_plot"
         self.ref_file = None
         self.preset_file = "load_default.glgp_preset"
