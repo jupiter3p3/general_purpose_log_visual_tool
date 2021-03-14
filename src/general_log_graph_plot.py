@@ -96,6 +96,7 @@ class CfgFiles:
 
 class PresetCfg:
     def __init__(self):
+        """Init the parameters of preset data"""
         self.data = {}
         self.data['_old_words'] = []
         self.data['_new_words'] = []
@@ -1131,6 +1132,37 @@ def fig_operation(fig, operation_item, avg_flag):
     return avg_flag
 
 
+def first_plot_of_fig(last_fig, new_fig_title, first_fig_flag, save_file_new):
+    first_fig_flag = False
+    last_fig.set_title(new_fig_title)
+    save_file_new = True
+    return first_fig_flag, save_file_new
+
+
+def second_and_others_plot_of_fig(fig, new_fig_title, cur_fig_num,  version_info, screen_dpi, fig_ratio):
+    fig[-1].set_total_fig_num(cur_fig_num)
+    cur_fig_num = fig[-1].plot_figure()
+    fig.append(LogFigure())  # first figure
+    init_cur_fig(fig[-1], version_info, screen_dpi, fig_ratio)
+    fig[-1].set_title(new_fig_title)
+    return cur_fig_num
+
+
+def new_fig_for_plot_figs(fig, new_fig_title, preset_cfg, first_fig_flag, save_file_new, cur_fig_num, version_info, screen_dpi, fig_ratio):
+    if first_fig_flag:
+        first_fig_flag, save_file_new = first_plot_of_fig(
+            fig[-1], new_fig_title, cur_fig_num, save_file_new)
+    else:
+        cur_fig_num = second_and_others_plot_of_fig(
+            fig, new_fig_title, cur_fig_num,  version_info, screen_dpi, fig_ratio)
+
+    if(len(preset_cfg.data['_time_step_sec']) > 0):
+        step_sec = preset_cfg.data['_time_step_sec'][-1]
+        if(check_data_is_all_value(step_sec)):
+            fig[-1].set_time_step_sec(float(step_sec))
+    return first_fig_flag, save_file_new, cur_fig_num
+
+
 def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi, fig, fig_ratio):
     first_fig_flag = True
     avg_flag = False
@@ -1148,21 +1180,9 @@ def plot_figs(cfg_file_with_path, preset_cfg, database, version_info, screen_dpi
                                                          '\\<', "\\>")
 
             if new_fig_title != "":  # new figure
-                if first_fig_flag:
-                    first_fig_flag = False
-                    fig[-1].set_title(new_fig_title)
-                    save_data_with_new_file = True
-                else:
-                    fig[-1].set_total_fig_num(cur_fig_num)
-                    cur_fig_num = fig[-1].plot_figure()
-                    fig.append(LogFigure())  # first figure
-                    init_cur_fig(fig[-1], version_info, screen_dpi, fig_ratio)
-                    fig[-1].set_title(new_fig_title)
+                first_fig_flag, save_data_with_new_file, cur_fig_num = new_fig_for_plot_figs(fig, new_fig_title, preset_cfg, first_fig_flag,
+                                                                                             save_data_with_new_file, cur_fig_num, version_info, screen_dpi, fig_ratio)
 
-                if(len(preset_cfg.data['_time_step_sec']) > 0):
-                    step_sec = preset_cfg.data['_time_step_sec'][-1]
-                    if(check_data_is_all_value(step_sec)):
-                        fig[-1].set_time_step_sec(float(step_sec))
             elif operation_item != "":  # share y axis
                 avg_flag = fig_operation(fig[-1], operation_item, avg_flag)
             else:  # data only
