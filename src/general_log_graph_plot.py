@@ -1,6 +1,7 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''[Version history]
+'''
+[Version history]
 
 To generatelog visual graph
 # Version|Date       |Author     |Note                                  |
@@ -44,14 +45,14 @@ import shutil
 
 class CodeVersionInfo:
     def __init__(self):
-        """version information"""
+        """Version information."""
         self.code_version = "0.0.4a"
         self.version_date = "20210313"
 
 
 class FigEnlargeRatio:
     def __init__(self):
-        """save the ratio of figure."""
+        """Save the ratio of figure."""
         self.screen_ratio_check = False
         self.ratio_x = 1.0
         self.ratio_y = 1.0
@@ -78,6 +79,11 @@ RESERVED_WORDS = ["product_name", "value_keys", "non_value_keys"]
 
 class CfgFiles:
     def __init__(self):
+        """
+        __init__ [configure files]
+
+        [parameters of configuration files]
+        """
         self.plot_file = "load_default.glgp_plot"
         self.ref_file = None
         self.preset_file = "load_default.glgp_preset"
