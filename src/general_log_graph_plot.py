@@ -782,6 +782,7 @@ class LogFigure:
         self.code_version = '0.0.0'
         self.version_date = '20999999'
         self.save_data = False
+        self.host_flag = False
 
     def set_show_max(self, flag):
         self.show_max = flag
@@ -911,6 +912,26 @@ class LogFigure:
 
         set_size(x_size_inch, y_size_inch, self.host)
 
+    def set_share_y_axis_of_gen_figure(self):
+        host_flag = (self.cur_data_count == 0)
+        self.host_flag = host_flag
+
+        if host_flag:
+            para = self.host
+            if self.share_y_axis_times > 1:  # before last data
+                self.share_start = True
+        else:
+            if self.share_start:
+                para = self.last_para
+                if self.share_y_axis_times == 1:  # last data
+                    self.share_start = False
+            else:
+                para = self.host.twinx()
+                if self.share_y_axis_times > 1:  # before last data
+                    self.share_start = True
+
+        self.last_para = para
+
     def gen_figure(self, database, new_data_key):
         if new_data_key not in database:
             return
@@ -930,23 +951,8 @@ class LogFigure:
             self.share_y_axis_times = 0
             debug_print("share cnt reset!!! key %s" % (new_data_key))
 
-        host_flag = (self.cur_data_count == 0)
-
-        if host_flag:
-            para = self.host
-            if self.share_y_axis_times > 1:  # before last data
-                self.share_start = True
-        else:
-            if self.share_start:
-                para = self.last_para
-                if self.share_y_axis_times == 1:  # last data
-                    self.share_start = False
-            else:
-                para = self.host.twinx()
-                if self.share_y_axis_times > 1:  # before last data
-                    self.share_start = True
-
-        self.last_para = para
+        self.set_share_y_axis_of_gen_figure()
+        para = self.last_para
 
         self.parameters.append(para)
         self.text_flag.append(text_flag)
@@ -1039,7 +1045,7 @@ class LogFigure:
                                  color=cur_color, zorder=cur_zorder+1)
             self.cur_annotate_count += 1
         else:
-            if host_flag and self.share_y_axis_times == 1:  # last data
+            if self.host_flag and self.share_y_axis_times == 1:  # last data
                 para.get_yaxis().set_visible(False)
 
             if self.share_y_axis_times > 0:
