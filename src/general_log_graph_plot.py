@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Version history.
+Record version/data/and which new.
 
 To generatelog visual graph
 # Version|Date       |Author     |Note                                  |
