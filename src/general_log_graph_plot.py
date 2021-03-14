@@ -713,17 +713,7 @@ def make_patch_spines_invisible(ax):
 
 
 def set_size(w, h, ax=None):
-    """
-    set_size [set figure size]
-
-    [set width and height to figure]
-
-    Args:
-        w ([float]): [width in inches]
-        h ([float]): [height in inches]
-        ax ([figure], optional): [target figure]. Defaults to None.
-    """
-
+    """Set figure width/height in inches."""
     if not ax:
         ax = plt.gca()
     left = ax.figure.subplotpars.left
