@@ -1,16 +1,12 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Version history.
-Record version/data/and which new.
+"""Version history."""
 
-To generatelog visual graph
 # Version|Date       |Author     |Note                                  |
 # 0.0.1  |20210217   |jupiter    |Draft version                         |
 # 0.0.2  |20210226   |jupiter    |Move configuration files to 'cfg'     |
 # 0.0.3  |20210228   |jupiter    |Check code via DeepSource and fix it  |
 # 0.0.4  |20210312   |jupiter    |Add function to dump data to file     |
-"""
 
 from os.path import dirname
 import tkinter as tk
@@ -97,7 +93,7 @@ class CfgFiles:
 
 class PresetCfg:
     def __init__(self):
-        """Init the parameters of preset data"""
+        """Init the parameters of preset data."""
         self.data = {}
         self.data['_old_words'] = []
         self.data['_new_words'] = []
@@ -130,6 +126,14 @@ class LogDatabase:
 
 
 def check_data_is_all_value(data):
+    """[For decide data type]
+
+    Args:
+        data ([any]): [want to confirm data]
+
+    Returns:
+        [bool]: [all members of data are values]
+    """
     is_value = True
     data_len = len(data)
 
