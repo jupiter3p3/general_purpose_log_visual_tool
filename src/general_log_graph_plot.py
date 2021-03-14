@@ -379,17 +379,22 @@ def check_data_loss(database, value_keys, key, cur_len):
             database[key].append(key_val_redundancy)
 
 
+def separate_filed_and_value(field, value):
+    field = field.split('/')
+    if len(field) > 1:
+        value = value.split('/')
+    else:
+        value = [str(value)]
+
+    for tmp_idx in range(min(len(field), len(value))):
+        field[tmp_idx] = field[tmp_idx].strip()
+        value[tmp_idx] = value[tmp_idx].strip()
+    return field, value
+
+
 def read_key_and_keyval_to_database(database, value_keys, non_value_keys, key, key_val, loss_data_check, cur_len):
     if key in database:
         if loss_data_check:
-            # loss_data_len = cur_len - 1 - len(database[key])
-            # if loss_data_len > 0:
-            #     for _ in range(loss_data_len):
-            #         if key in value_keys:
-            #             key_val_redundancy = -0.01
-            #         else:
-            #             key_val_redundancy = "unknown"
-            #         database[key].append(key_val_redundancy)
             check_data_loss(database, value_keys, key, cur_len)
         if key in value_keys:
             try:
@@ -406,14 +411,6 @@ def read_key_and_keyval_to_database(database, value_keys, non_value_keys, key, k
         database[key] = [key_val]
 
         if loss_data_check:
-            # loss_data_len = cur_len - 1
-            # if loss_data_len > 0:
-            #     for _ in range(loss_data_len):
-            #         if key in value_keys:
-            #             key_val_redundancy = -0.01
-            #         else:
-            #             key_val_redundancy = "unknown"
-            #         database[key].insert(0, key_val_redundancy)
             check_data_loss(database, value_keys, key, cur_len)
 
 
@@ -447,15 +444,7 @@ def get_data_from_file(database, preset_cfg):
                     for tmp_idx in range(2, tmp_len):
                         value += line_data.split('=')[tmp_idx]
 
-                field = field.split('/')
-                if len(field) > 1:
-                    value = value.split('/')
-                else:
-                    value = [str(value)]
-
-                for tmp_idx in range(min(len(field), len(value))):
-                    field[tmp_idx] = field[tmp_idx].strip()
-                    value[tmp_idx] = value[tmp_idx].strip()
+                field, value = separate_filed_and_value(field, value)
 
                 for tmp_idx in range(min(len(field), len(value))):
                     key = field[tmp_idx].strip()
@@ -463,20 +452,6 @@ def get_data_from_file(database, preset_cfg):
                     found = find_word_before_suffix(key_val, "dBm")
                     if found != '':
                         key_val = found.strip()
-                    # if key in database:
-                    #     if key in value_keys:
-                    #         try:
-                    #             key_val = float(key_val)
-                    #         except ValueError:
-                    #             key_val = -0.01
-                    #     database[key].append(key_val)
-                    # else:
-                    #     if key_val.lstrip('-+').isnumeric():
-                    #         value_keys.append(key)
-                    #         key_val = float(key_val)
-                    #     else:
-                    #         non_value_keys.append(key)
-                    #     database[key] = [key_val]
                     read_key_and_keyval_to_database(
                         database, value_keys, non_value_keys, key, key_val, False, 0)
         f.close()
@@ -550,15 +525,7 @@ def get_data_from_file(database, preset_cfg):
                     for tmp_idx in range(2, tmp_len):
                         value += line_data.split(_key_value_sep)[tmp_idx]
 
-                field = field.split('/')
-                if len(field) > 1:
-                    value = value.split('/')
-                else:
-                    value = [str(value)]
-
-                for tmp_idx in range(min(len(field), len(value))):
-                    field[tmp_idx] = field[tmp_idx].strip()
-                    value[tmp_idx] = value[tmp_idx].strip()
+                field, value = separate_filed_and_value(field, value)
 
                 for tmp_idx in range(min(len(field), len(value))):
                     key = field[tmp_idx].strip()
@@ -569,37 +536,6 @@ def get_data_from_file(database, preset_cfg):
 
                     if found != '':
                         key_val = found.strip()
-                    # if key in database:
-                    #     loss_data_len = cur_len - 1 - len(database[key])
-                    #     if loss_data_len > 0:
-                    #         for _ in range(loss_data_len):
-                    #             if key in value_keys:
-                    #                 key_val_redundancy = -0.01
-                    #             else:
-                    #                 key_val_redundancy = "unknown"
-                    #             database[key].append(key_val_redundancy)
-                    #     if key in value_keys:
-                    #         try:
-                    #             key_val = float(key_val)
-                    #         except ValueError:
-                    #             key_val = -0.01
-                    #     database[key].append(key_val)
-                    # else:
-                    #     if key_val.lstrip('-+').isnumeric():
-                    #         value_keys.append(key)
-                    #         key_val = float(key_val)
-                    #     else:
-                    #         non_value_keys.append(key)
-                    #     database[key] = [key_val]
-
-                    #     loss_data_len = cur_len - 1
-                    #     if loss_data_len > 0:
-                    #         for _ in range(loss_data_len):
-                    #             if key in value_keys:
-                    #                 key_val_redundancy = -0.01
-                    #             else:
-                    #                 key_val_redundancy = "unknown"
-                    #             database[key].insert(0, key_val_redundancy)
                     read_key_and_keyval_to_database(
                         database, value_keys, non_value_keys, key, key_val, True, cur_len)
 
