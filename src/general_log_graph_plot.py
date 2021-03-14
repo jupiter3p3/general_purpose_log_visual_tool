@@ -404,6 +404,39 @@ def open_file_and_check_most_key_length(database, value_keys, non_value_keys):
     database["non_value_keys"] = non_value_keys
     return file_path
 
+
+def pre_process_data(line_data, preset_cfg):
+    line_data = remove_time_stamp_in_prefix(line_data)
+
+    # replace words start
+    for tmp_idx, _old_words in enumerate(preset_cfg.data['_old_words']):
+        _new_words = preset_cfg.data['_new_words'][tmp_idx]
+        line_data = line_data.replace(_old_words, _new_words)
+    # replace words end
+
+    # remove pattern start
+    for _, _remove_words in enumerate(preset_cfg.data['_remove_words']):
+        line_data = line_data.replace(_remove_words, '')
+    # remove pattern end
+
+    # use one format to segment data start
+    for _, _data_seg in enumerate(preset_cfg.data['_data_seg']):
+        line_data = line_data.replace(_data_seg, '/')
+    # use one format to segment data end
+
+    # update _key_value_sep start
+    if(len(preset_cfg.data['_key_value_sep']) > 0):
+        _key_value_sep = preset_cfg.data['_key_value_sep'][-1]
+    else:
+        _key_value_sep = '='
+    # update _key_value_sep end
+
+    line_data = line_data.replace(_key_value_sep, '=')
+    _key_value_sep = '='
+
+    return line_data, _key_value_sep
+
+
 def check_data_loss(database, value_keys, key, cur_len):
     loss_data_len = cur_len - 1 - len(database[key])
     if loss_data_len > 0:
@@ -450,7 +483,6 @@ def read_key_and_keyval_to_database(database, value_keys, non_value_keys, key, k
             check_data_loss(database, value_keys, key, cur_len)
 
 
-
 def get_data_from_file(database, preset_cfg):
     product_name_found_flag = False
     non_value_keys = []
@@ -461,7 +493,8 @@ def get_data_from_file(database, preset_cfg):
     root.tk.call('tk', 'scaling', 10.0)
     root.withdraw()
 
-    file_path = open_file_and_check_most_key_length(database, value_keys, non_value_keys)
+    file_path = open_file_and_check_most_key_length(
+        database, value_keys, non_value_keys)
 
     item_nums = []
 
@@ -485,33 +518,7 @@ def get_data_from_file(database, preset_cfg):
         database["product_name"] = ""
 
         for line_data in fl:
-            line_data = remove_time_stamp_in_prefix(line_data)
-
-            # replace words start
-            for tmp_idx, _old_words in enumerate(preset_cfg.data['_old_words']):
-                _new_words = preset_cfg.data['_new_words'][tmp_idx]
-                line_data = line_data.replace(_old_words, _new_words)
-            # replace words end
-
-            # remove pattern start
-            for _, _remove_words in enumerate(preset_cfg.data['_remove_words']):
-                line_data = line_data.replace(_remove_words, '')
-            # remove pattern end
-
-            # use one format to segment data start
-            for _, _data_seg in enumerate(preset_cfg.data['_data_seg']):
-                line_data = line_data.replace(_data_seg, '/')
-            # use one format to segment data end
-
-            # update _key_value_sep start
-            if(len(preset_cfg.data['_key_value_sep']) > 0):
-                _key_value_sep = preset_cfg.data['_key_value_sep'][-1]
-            else:
-                _key_value_sep = '='
-            # update _key_value_sep end
-
-            line_data = line_data.replace(_key_value_sep, '=')
-            _key_value_sep = '='
+            line_data, _key_value_sep = pre_process_data(line_data, preset_cfg)
 
             if not product_name_found_flag:
                 found = find_product_name(line_data)
@@ -1102,7 +1109,7 @@ def init_cur_fig(cur_fig, version_info, screen_dpi, fig_ratio):
 
 def fig_operation(fig, operation_item, avg_flag):
     # def fig_operation(fig, operation_item):
-    #avg_flag_final = False
+    # avg_flag_final = False
     if operation_item.isnumeric():
         fig.set_share_y_axis_times(float(operation_item))
     elif operation_item == "avg":
