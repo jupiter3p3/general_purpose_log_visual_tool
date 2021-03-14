@@ -368,6 +368,55 @@ def database_insert_data(database, new_data, data_key, value_flag):
     return database
 
 
+def check_data_loss(database, value_keys, key, cur_len):
+    loss_data_len = cur_len - 1 - len(database[key])
+    if loss_data_len > 0:
+        for _ in range(loss_data_len):
+            if key in value_keys:
+                key_val_redundancy = -0.01
+            else:
+                key_val_redundancy = "unknown"
+            database[key].append(key_val_redundancy)
+
+
+def read_key_and_keyval_to_database(database, value_keys, non_value_keys, key, key_val, loss_data_check, cur_len):
+    if key in database:
+        if loss_data_check:
+            # loss_data_len = cur_len - 1 - len(database[key])
+            # if loss_data_len > 0:
+            #     for _ in range(loss_data_len):
+            #         if key in value_keys:
+            #             key_val_redundancy = -0.01
+            #         else:
+            #             key_val_redundancy = "unknown"
+            #         database[key].append(key_val_redundancy)
+            check_data_loss(database, value_keys, key, cur_len)
+        if key in value_keys:
+            try:
+                key_val = float(key_val)
+            except ValueError:
+                key_val = -0.01
+        database[key].append(key_val)
+    else:
+        if key_val.lstrip('-+').isnumeric():
+            value_keys.append(key)
+            key_val = float(key_val)
+        else:
+            non_value_keys.append(key)
+        database[key] = [key_val]
+
+        if loss_data_check:
+            # loss_data_len = cur_len - 1
+            # if loss_data_len > 0:
+            #     for _ in range(loss_data_len):
+            #         if key in value_keys:
+            #             key_val_redundancy = -0.01
+            #         else:
+            #             key_val_redundancy = "unknown"
+            #         database[key].insert(0, key_val_redundancy)
+            check_data_loss(database, value_keys, key, cur_len)
+
+
 def get_data_from_file(database, preset_cfg):
     product_name_found_flag = False
     non_value_keys = []
@@ -414,20 +463,22 @@ def get_data_from_file(database, preset_cfg):
                     found = find_word_before_suffix(key_val, "dBm")
                     if found != '':
                         key_val = found.strip()
-                    if key in database:
-                        if key in value_keys:
-                            try:
-                                key_val = float(key_val)
-                            except ValueError:
-                                key_val = -0.01
-                        database[key].append(key_val)
-                    else:
-                        if key_val.lstrip('-+').isnumeric():
-                            value_keys.append(key)
-                            key_val = float(key_val)
-                        else:
-                            non_value_keys.append(key)
-                        database[key] = [key_val]
+                    # if key in database:
+                    #     if key in value_keys:
+                    #         try:
+                    #             key_val = float(key_val)
+                    #         except ValueError:
+                    #             key_val = -0.01
+                    #     database[key].append(key_val)
+                    # else:
+                    #     if key_val.lstrip('-+').isnumeric():
+                    #         value_keys.append(key)
+                    #         key_val = float(key_val)
+                    #     else:
+                    #         non_value_keys.append(key)
+                    #     database[key] = [key_val]
+                    read_key_and_keyval_to_database(
+                        database, value_keys, non_value_keys, key, key_val, False, 0)
         f.close()
     database["value_keys"] = value_keys
     database["non_value_keys"] = non_value_keys
@@ -518,37 +569,39 @@ def get_data_from_file(database, preset_cfg):
 
                     if found != '':
                         key_val = found.strip()
-                    if key in database:
-                        loss_data_len = cur_len - 1 - len(database[key])
-                        if loss_data_len > 0:
-                            for _ in range(loss_data_len):
-                                if key in value_keys:
-                                    key_val_redundancy = -0.01
-                                else:
-                                    key_val_redundancy = "unknown"
-                                database[key].append(key_val_redundancy)
-                        if key in value_keys:
-                            try:
-                                key_val = float(key_val)
-                            except ValueError:
-                                key_val = -0.01
-                        database[key].append(key_val)
-                    else:
-                        if key_val.lstrip('-+').isnumeric():
-                            value_keys.append(key)
-                            key_val = float(key_val)
-                        else:
-                            non_value_keys.append(key)
-                        database[key] = [key_val]
+                    # if key in database:
+                    #     loss_data_len = cur_len - 1 - len(database[key])
+                    #     if loss_data_len > 0:
+                    #         for _ in range(loss_data_len):
+                    #             if key in value_keys:
+                    #                 key_val_redundancy = -0.01
+                    #             else:
+                    #                 key_val_redundancy = "unknown"
+                    #             database[key].append(key_val_redundancy)
+                    #     if key in value_keys:
+                    #         try:
+                    #             key_val = float(key_val)
+                    #         except ValueError:
+                    #             key_val = -0.01
+                    #     database[key].append(key_val)
+                    # else:
+                    #     if key_val.lstrip('-+').isnumeric():
+                    #         value_keys.append(key)
+                    #         key_val = float(key_val)
+                    #     else:
+                    #         non_value_keys.append(key)
+                    #     database[key] = [key_val]
 
-                        loss_data_len = cur_len - 1
-                        if loss_data_len > 0:
-                            for _ in range(loss_data_len):
-                                if key in value_keys:
-                                    key_val_redundancy = -0.01
-                                else:
-                                    key_val_redundancy = "unknown"
-                                database[key].insert(0, key_val_redundancy)
+                    #     loss_data_len = cur_len - 1
+                    #     if loss_data_len > 0:
+                    #         for _ in range(loss_data_len):
+                    #             if key in value_keys:
+                    #                 key_val_redundancy = -0.01
+                    #             else:
+                    #                 key_val_redundancy = "unknown"
+                    #             database[key].insert(0, key_val_redundancy)
+                    read_key_and_keyval_to_database(
+                        database, value_keys, non_value_keys, key, key_val, True, cur_len)
 
     database["value_keys"] = value_keys
     database["non_value_keys"] = non_value_keys
@@ -858,17 +911,17 @@ class LogFigure:
                     debug_print("SetProcessDPIAware errorCode = %d" %
                                 (errorCode))
 
-            monitors = EnumDisplayMonitors()
+            # monitors = EnumDisplayMonitors()
 
-            if (len(monitors) == 1):
-                monitor = monitors[0]
-                if win8_higher_os_flag:
-                    ctypes.windll.shcore.GetDpiForMonitor(monitor[0].handle, 0,
-                                                          ctypes.byref(dpiX),
-                                                          ctypes.byref(dpiY))
+            # if (len(monitors) == 1):
+            #     monitor = monitors[0]
+            #     if win8_higher_os_flag:
+            #         ctypes.windll.shcore.GetDpiForMonitor(monitor[0].handle, 0,
+            #                                               ctypes.byref(dpiX),
+            #                                               ctypes.byref(dpiY))
 
-                    debug_print(f"Monitor (hmonitor: {monitor[0]}) = dpiX:\
-                                {dpiX.value}, dpiY: {dpiY.value}")
+            #         debug_print(f"Monitor (hmonitor: {monitor[0]}) = dpiX:\
+            #                     {dpiX.value}, dpiY: {dpiY.value}")
 
             if not self.screen_ratio_check:
                 fig_ratio.ratio_x = float(
