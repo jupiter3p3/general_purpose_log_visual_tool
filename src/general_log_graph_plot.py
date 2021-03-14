@@ -44,6 +44,11 @@ import shutil
 
 class CodeVersionInfo:
     def __init__(self):
+        """
+        __init__ [version information]
+
+        """
+
         self.code_version = "0.0.4a"
         self.version_date = "20210313"
 
@@ -709,7 +714,17 @@ def make_patch_spines_invisible(ax):
 
 
 def set_size(w, h, ax=None):
-    """ w, h: width, height in inches """
+    """
+    set_size [set figure size]
+
+    [set width and height to figure]
+
+    Args:
+        w ([float]): [width in inches]
+        h ([float]): [height in inches]
+        ax ([figure], optional): [target figure]. Defaults to None.
+    """
+
     if not ax:
         ax = plt.gca()
     left = ax.figure.subplotpars.left
