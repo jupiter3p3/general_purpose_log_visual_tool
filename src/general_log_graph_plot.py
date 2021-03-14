@@ -51,7 +51,7 @@ class CodeVersionInfo:
 
 class FigEnlargeRatio:
     def __init__(self):
-        """save the ratio of figure"""
+        """save the ratio of figure."""
         self.screen_ratio_check = False
         self.ratio_x = 1.0
         self.ratio_y = 1.0
