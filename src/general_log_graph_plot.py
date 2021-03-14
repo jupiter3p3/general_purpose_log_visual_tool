@@ -1270,7 +1270,7 @@ def main():
     fig_ratio = FigEnlargeRatio()
 
     with open(cfg_ref_file_with_path, 'w') as fw:
-        for key in database.keys():
+        for key in database:
             if key not in RESERVED_WORDS:
                 f_data = "%s\n" % (key)
                 fw.write(f_data)
