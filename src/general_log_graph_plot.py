@@ -76,11 +76,7 @@ RESERVED_WORDS = ["product_name", "value_keys", "non_value_keys"]
 
 class CfgFiles:
     def __init__(self):
-        """
-        configure files.
-
-        parameters of configuration files
-        """
+        """parameters of configuration files."""
         self.plot_file = "load_default.glgp_plot"
         self.ref_file = None
         self.preset_file = "load_default.glgp_preset"
@@ -749,6 +745,7 @@ def set_size(w, h, ax=None):
 
 class LogFigure:
     def __init__(self):
+        """Init figure all data."""
         self.cur_data_count = 0
         self.time_step_sec = 1
         self.y_range_max = 0
