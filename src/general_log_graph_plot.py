@@ -436,32 +436,59 @@ def pre_process_data(line_data, preset_cfg):
 
     return line_data, _key_value_sep
 
+'''
+            if(check_data_line(line_data)):
+                        debug_print(line_data)
+
+                tmp_len = len(line_data.split(_key_value_sep))
+                field = line_data.split(_key_value_sep)[0]
+                value = line_data.split(_key_value_sep)[1]
+
+                if tmp_len > 2:
+                    for tmp_idx in range(2, tmp_len):
+                        value += line_data.split(_key_value_sep)[tmp_idx]
+
+                field, value = separate_filed_and_value(field, value)
+
+                for tmp_idx in range(min(len(field), len(value))):
+                    key = field[tmp_idx].strip()
+                    if key == data_len_most_pattern:
+                        cur_len += 1
+                    key_val = value[tmp_idx].strip()
+                    found = find_word_before_suffix(key_val, "dBm")
+
+                    if found != '':
+                        key_val = found.strip()
+                    read_key_and_keyval_to_database(
+                        database, value_keys, non_value_keys, key, key_val, True, cur_len)
+'''
+
 
 def process_data(line_data, _key_value_sep, data_len_most_pattern, database, value_keys, non_value_keys, key, cur_len):
     if(check_data_line(line_data)):
         debug_print(line_data)
 
-    tmp_len = len(line_data.split(_key_value_sep))
-    field = line_data.split(_key_value_sep)[0]
-    value = line_data.split(_key_value_sep)[1]
+        tmp_len = len(line_data.split(_key_value_sep))
+        field = line_data.split(_key_value_sep)[0]
+        value = line_data.split(_key_value_sep)[1]
 
-    if tmp_len > 2:
-        for tmp_idx in range(2, tmp_len):
-            value += line_data.split(_key_value_sep)[tmp_idx]
+        if tmp_len > 2:
+            for tmp_idx in range(2, tmp_len):
+                value += line_data.split(_key_value_sep)[tmp_idx]
 
-    field, value = separate_filed_and_value(field, value)
+        field, value = separate_filed_and_value(field, value)
 
-    for tmp_idx in range(min(len(field), len(value))):
-        key = field[tmp_idx].strip()
-        if key == data_len_most_pattern:
-            cur_len += 1
-        key_val = value[tmp_idx].strip()
-        found = find_word_before_suffix(key_val, "dBm")
+        for tmp_idx in range(min(len(field), len(value))):
+            key = field[tmp_idx].strip()
+            if key == data_len_most_pattern:
+                cur_len += 1
+            key_val = value[tmp_idx].strip()
+            found = find_word_before_suffix(key_val, "dBm")
 
-        if found != '':
-            key_val = found.strip()
-        read_key_and_keyval_to_database(
-            database, value_keys, non_value_keys, key, key_val, True, cur_len)
+            if found != '':
+                key_val = found.strip()
+            read_key_and_keyval_to_database(
+                database, value_keys, non_value_keys, key, key_val, True, cur_len)
     return cur_len
 
 
