@@ -464,9 +464,9 @@ def process_data(line_data, _key_value_sep, data_len_most_pattern, database, val
                 database, value_keys, non_value_keys, key, key_val, True, cur_len)
     return cur_len
 
-def post_process(preset_cfg, database):
-    # post process start
-    # format
+
+def post_process_format(preset_cfg, database):
+    # format start
     for tmp_idx, _format_new_item in enumerate(preset_cfg.data['_format_new_item']):
         _format_format = preset_cfg.data['_format_format'][tmp_idx]
         _format_item_01 = preset_cfg.data['_format_item_01'][tmp_idx]
@@ -485,7 +485,10 @@ def post_process(preset_cfg, database):
 
             database = database_insert_data(database, tmp_data_array,
                                             _format_new_item, False)
+    # format end
 
+
+def post_process_alias(preset_cfg, database):
     # alias start
     for tmp_idx, _alias_ori_item in enumerate(preset_cfg.data['_alias_ori_item']):
         _alias_new_item = preset_cfg.data['_alias_new_item'][tmp_idx]
@@ -498,6 +501,8 @@ def post_process(preset_cfg, database):
                 _alias_new_item, is_value)
     # alias end
 
+
+def post_process_calculation(preset_cfg, database):
     # calculation start
     for tmp_idx, _post_new_item in enumerate(preset_cfg.data['_post_new_item']):
         _post_item_01 = preset_cfg.data['_post_item_01'][tmp_idx]
@@ -554,6 +559,52 @@ def post_process(preset_cfg, database):
                                                 _post_new_item, True)
 
     # calculation end
+
+
+def post_process_trans(preset_cfg, database):
+    # trans_data start
+    for tmp_idx, _trans_item in enumerate(preset_cfg.data['_trans_item']):
+        _trans_op_code = preset_cfg.data['_trans_op_code'][tmp_idx]
+        if _trans_item in database.keys():
+            if _trans_op_code == 'hex2dec':
+                data_tmp_array = []
+                for _, source_data in enumerate(database[_trans_item]):
+                    try:
+                        data_tmp = int(source_data, 16)
+                    except ValueError:
+                        data_tmp = -0.01
+                    data_tmp_array.append(data_tmp)
+                database["non_value_keys"].remove(_trans_item)
+                database = database_insert_data(
+                    database, data_tmp_array, _trans_item, True)
+                # database["value_keys"].append(_trans_item)
+            elif _trans_op_code == 'char2int':
+                data_tmp_array = []
+                for _, source_data in enumerate(database[_trans_item]):
+                    try:
+                        data_tmp = 0
+                        len_tmp = len(source_data)
+                        for tmp_idx_c2i in range(len_tmp):
+                            data_tmp += ord(source_data[tmp_idx_c2i])
+                    except ValueError:
+                        data_tmp = -0.01
+                    data_tmp_array.append(data_tmp)
+                database["non_value_keys"].remove(_trans_item)
+                database = database_insert_data(
+                    database, data_tmp_array, _trans_item, True)
+    # trans_data end
+
+
+def post_process(preset_cfg, database):
+    # post process start
+    post_process_format(preset_cfg, database)
+    post_process_alias(preset_cfg, database)
+    post_process_calculation(preset_cfg, database)
+    database["value_keys"] = list(set(database["value_keys"]))
+    database["non_value_keys"] = list(set(database["non_value_keys"]))
+    post_process_trans(preset_cfg, database)
+    # post process end
+
 
 def check_data_loss(database, value_keys, key, cur_len):
     loss_data_len = cur_len - 1 - len(database[key])
@@ -650,41 +701,6 @@ def get_data_from_file(database, preset_cfg):
     database["non_value_keys"] = non_value_keys
 
     post_process(preset_cfg, database)
-
-    database["value_keys"] = list(set(database["value_keys"]))
-    database["non_value_keys"] = list(set(database["non_value_keys"]))
-
-    # trans_data start
-    for tmp_idx, _trans_item in enumerate(preset_cfg.data['_trans_item']):
-        _trans_op_code = preset_cfg.data['_trans_op_code'][tmp_idx]
-        if _trans_item in database.keys():
-            if _trans_op_code == 'hex2dec':
-                data_tmp_array = []
-                for _, source_data in enumerate(database[_trans_item]):
-                    try:
-                        data_tmp = int(source_data, 16)
-                    except ValueError:
-                        data_tmp = -0.01
-                    data_tmp_array.append(data_tmp)
-                database["non_value_keys"].remove(_trans_item)
-                database = database_insert_data(
-                    database, data_tmp_array, _trans_item, True)
-                # database["value_keys"].append(_trans_item)
-            elif _trans_op_code == 'char2int':
-                data_tmp_array = []
-                for _, source_data in enumerate(database[_trans_item]):
-                    try:
-                        data_tmp = 0
-                        len_tmp = len(source_data)
-                        for tmp_idx_c2i in range(len_tmp):
-                            data_tmp += ord(source_data[tmp_idx_c2i])
-                    except ValueError:
-                        data_tmp = -0.01
-                    data_tmp_array.append(data_tmp)
-                database["non_value_keys"].remove(_trans_item)
-                database = database_insert_data(
-                    database, data_tmp_array, _trans_item, True)
-    # trans_data end
 
     return database, screen_dpi, file_path
 
