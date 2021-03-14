@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 from os.path import join
-import random
+# import random
 import datetime
 from sklearn.preprocessing import LabelEncoder
 from pylab import get_current_fig_manager
@@ -293,8 +293,8 @@ def get_win_pos_cfg(index):
         x = base_x + tmp_x
         y = base_y + tmp_y
     else:
-        tmp_x = int(float((1+random.random())*tmp_x*0.5))
-        tmp_y = int(float((1+random.random())*tmp_y*0.5))
+        tmp_x = int(float((1+np.random.rand())*tmp_x*0.5))
+        tmp_y = int(float((1+np.random.rand())*tmp_y*0.5))
         x = base_x + tmp_x
         y = base_y + tmp_y
     ans = "+%s+%s" % (x, y)
